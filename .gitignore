@@ -23,3 +23,11 @@ go.work.sum
 
 # env file
 .env
+.roo
+.clinerules-ask
+.clinerules-code
+.clinerules-debug
+.clinerules-test
+.clinerules-architect
+.roomode
+
