@@ -31,3 +31,5 @@ go.work.sum
 .clinerules-architect
 .roomode
 
+node_modules
+.next
