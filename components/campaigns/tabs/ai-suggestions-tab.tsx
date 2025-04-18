@@ -1,302 +1,709 @@
-"use client"
+"use client";
 
-import { ArrowRightIcon, LightbulbIcon, SparklesIcon, TrendingUpIcon } from "lucide-react"
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import {
+  Loader2,
+  RefreshCw,
+  Lightbulb,
+  Sparkles,
+  BarChart,
+  Target,
+} from "lucide-react";
+import {
+  generateAdText,
+  generateKeywordSuggestions,
+  analyzePerformance,
+  generateOptimizationSuggestions,
+} from "@/lib/gemini-api";
 
 interface AiSuggestionsTabProps {
-  campaignId: string
+  campaignId: string;
+  campaignData?: any;
 }
 
-export function AiSuggestionsTab({ campaignId }: AiSuggestionsTabProps) {
+export function AiSuggestionsTab({
+  campaignId,
+  campaignData,
+}: AiSuggestionsTabProps) {
+  const [activeTab, setActiveTab] = useState("adText");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // State for each suggestion type
+  const [adTextSuggestions, setAdTextSuggestions] = useState<{
+    headlines?: string[];
+    descriptions?: string[];
+  } | null>(null);
+
+  const [keywordSuggestions, setKeywordSuggestions] = useState<string[] | null>(
+    null
+  );
+
+  const [performanceInsights, setPerformanceInsights] = useState<{
+    insights: string[];
+    recommendations: string[];
+  } | null>(null);
+
+  const [optimizationSuggestions, setOptimizationSuggestions] = useState<{
+    budgetRecommendations: string[];
+    keywordRecommendations: string[];
+    targetingRecommendations: string[];
+    structureRecommendations: string[];
+  } | null>(null);
+
+  // Mock campaign data for demo purposes
+  const mockCampaignData = {
+    name: "Summer Sale Campaign",
+    description: "Promoting summer products with special discounts",
+    targetAudience:
+      "Adults 25-45 interested in outdoor activities and summer fashion",
+    metrics: {
+      impressions: 45000,
+      clicks: 2250,
+      conversions: 112,
+      cost: 1800,
+      revenue: 5600,
+    },
+    timeframe: "Last 30 days",
+    previousPerformance: {
+      impressions: 40000,
+      clicks: 1800,
+      conversions: 90,
+      cost: 1600,
+      revenue: 4500,
+    },
+    budget: 60,
+    bidStrategy: "Maximize Conversions",
+    keywords: [
+      {
+        keyword: "summer sale",
+        impressions: 12000,
+        clicks: 600,
+        conversions: 30,
+        cost: 480,
+      },
+      {
+        keyword: "summer fashion",
+        impressions: 8000,
+        clicks: 400,
+        conversions: 20,
+        cost: 320,
+      },
+      {
+        keyword: "beach accessories",
+        impressions: 6000,
+        clicks: 300,
+        conversions: 15,
+        cost: 240,
+      },
+      {
+        keyword: "summer discount",
+        impressions: 5000,
+        clicks: 250,
+        conversions: 12,
+        cost: 200,
+      },
+      {
+        keyword: "outdoor gear sale",
+        impressions: 4000,
+        clicks: 200,
+        conversions: 10,
+        cost: 160,
+      },
+      {
+        keyword: "winter clothes",
+        impressions: 200,
+        clicks: 5,
+        conversions: 0,
+        cost: 10,
+      },
+      {
+        keyword: "fall fashion",
+        impressions: 300,
+        clicks: 8,
+        conversions: 0,
+        cost: 16,
+      },
+      {
+        keyword: "holiday gifts",
+        impressions: 250,
+        clicks: 6,
+        conversions: 0,
+        cost: 12,
+      },
+    ],
+    adGroups: [
+      {
+        name: "Summer Clothing",
+        impressions: 20000,
+        clicks: 1000,
+        conversions: 50,
+        cost: 800,
+      },
+      {
+        name: "Beach Accessories",
+        impressions: 15000,
+        clicks: 750,
+        conversions: 37,
+        cost: 600,
+      },
+      {
+        name: "Outdoor Gear",
+        impressions: 10000,
+        clicks: 500,
+        conversions: 25,
+        cost: 400,
+      },
+    ],
+    targeting: {
+      locations: ["United States", "Canada", "United Kingdom"],
+      devices: ["Mobile", "Desktop", "Tablet"],
+      demographics: ["25-34", "35-44", "Male", "Female"],
+    },
+    goals: {
+      primary: "Maximize ROAS",
+      target: 300,
+    },
+  };
+
+  // Function to generate ad text suggestions
+  const handleGenerateAdText = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = campaignData || mockCampaignData;
+      const result = await generateAdText(
+        data.description,
+        data.targetAudience,
+        "both"
+      );
+      setAdTextSuggestions(result);
+    } catch (err) {
+      setError("Failed to generate ad text suggestions. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to generate keyword suggestions
+  const handleGenerateKeywords = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = campaignData || mockCampaignData;
+      const existingKeywords = data.keywords.map((k: any) => k.keyword);
+      const result = await generateKeywordSuggestions(
+        data.description,
+        data.targetAudience,
+        existingKeywords
+      );
+      setKeywordSuggestions(result);
+    } catch (err) {
+      setError("Failed to generate keyword suggestions. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to analyze performance
+  const handleAnalyzePerformance = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = campaignData || mockCampaignData;
+      const result = await analyzePerformance({
+        name: data.name,
+        metrics: data.metrics,
+        timeframe: data.timeframe,
+        targetAudience: data.targetAudience,
+        previousPerformance: data.previousPerformance,
+      });
+      setPerformanceInsights(result);
+    } catch (err) {
+      setError("Failed to analyze performance. Please try again.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Function to generate optimization suggestions
+  const handleGenerateOptimizations = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = campaignData || mockCampaignData;
+      const result = await generateOptimizationSuggestions({
+        name: data.name,
+        budget: data.budget,
+        bidStrategy: data.bidStrategy,
+        keywords: data.keywords,
+        adGroups: data.adGroups,
+        targeting: data.targeting,
+        goals: data.goals,
+      });
+      setOptimizationSuggestions(result);
+    } catch (err) {
+      setError(
+        "Failed to generate optimization suggestions. Please try again."
+      );
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <Card>
-        <CardHeader className="flex flex-row items-center gap-2">
-          <SparklesIcon className="h-5 w-5 text-primary" />
-          <div>
-            <CardTitle>Gemini AI 最適化提案</CardTitle>
-            <CardDescription>AIによるキャンペーン最適化の提案</CardDescription>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="suggestions">
-            <TabsList className="mb-4">
-              <TabsTrigger value="suggestions">最適化提案</TabsTrigger>
-              <TabsTrigger value="keywords">キーワード提案</TabsTrigger>
-              <TabsTrigger value="ads">広告文提案</TabsTrigger>
-            </TabsList>
-            <TabsContent value="suggestions" className="space-y-4">
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <LightbulbIcon className="mt-0.5 h-5 w-5 text-amber-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">入札戦略の最適化</p>
-                    <p className="text-sm text-muted-foreground">
-                      コンバージョン価値の最大化を目標とした自動入札に切り替えることで、ROASが20%向上する可能性があります。過去30日間のデータに基づく予測です。
-                    </p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      提案を適用
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <TrendingUpIcon className="mt-0.5 h-5 w-5 text-emerald-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">広告スケジュールの最適化</p>
-                    <p className="text-sm text-muted-foreground">
-                      コンバージョン率が高い時間帯（15時〜21時）に予算を重点的に配分するよう広告スケジュールを最適化することで、全体のコンバージョン率が8%向上する可能性があります。
-                    </p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      提案を適用
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <LightbulbIcon className="mt-0.5 h-5 w-5 text-amber-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">デバイス別入札調整</p>
-                    <p className="text-sm text-muted-foreground">
-                      モバイルデバイスでのコンバージョン率がデスクトップより15%低いため、モバイルの入札単価を10%下げ、デスクトップの入札単価を15%上げることで、全体のROIを向上させることができます。
-                    </p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      提案を適用
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <Button variant="link" className="w-full">
-                すべての提案を見る
-                <ArrowRightIcon className="ml-2 h-4 w-4" />
-              </Button>
-            </TabsContent>
-            <TabsContent value="keywords" className="space-y-4">
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <LightbulbIcon className="mt-0.5 h-5 w-5 text-amber-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">追加キーワード提案</p>
-                    <p className="text-sm text-muted-foreground">
-                      以下のキーワードを追加することで、より多くの潜在顧客にリーチできる可能性があります：
-                    </p>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      <li>「ECサイト 構築 費用」</li>
-                      <li>「ネットショップ 初心者 開設方法」</li>
-                      <li>「オンラインショップ 簡単 構築」</li>
-                      <li>「ECサイト プラットフォーム 比較」</li>
-                      <li>「ネットショップ 作り方 無料」</li>
-                    </ul>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      すべて追加
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <TrendingUpIcon className="mt-0.5 h-5 w-5 text-emerald-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">低パフォーマンスキーワードの最適化</p>
-                    <p className="text-sm text-muted-foreground">
-                      以下のキーワードのパフォーマンスが低いため、一時停止または入札単価の見直しを検討してください：
-                    </p>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      <li>「ネットショップ 作り方」（CTR: 2.85%、コンバージョン率: 4.44%）</li>
-                      <li>「オンラインストア 構築」（CTR: 2.65%、コンバージョン率: 3.85%）</li>
-                    </ul>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      最適化を適用
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <LightbulbIcon className="mt-0.5 h-5 w-5 text-amber-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">除外キーワード提案</p>
-                    <p className="text-sm text-muted-foreground">
-                      以下のキーワードを除外キーワードとして追加することで、無関係なクリックを減らし、広告費用を最適化できます：
-                    </p>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      <li>「無料」</li>
-                      <li>「テンプレート ダウンロード」</li>
-                      <li>「自作」</li>
-                    </ul>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      すべて追加
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-            <TabsContent value="ads" className="space-y-4">
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <LightbulbIcon className="mt-0.5 h-5 w-5 text-amber-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">広告文の最適化提案</p>
-                    <p className="text-sm text-muted-foreground">
-                      以下の広告文要素を追加することで、CTRとコンバージョン率を向上させることができます：
-                    </p>
-                    <ul className="mt-2 space-y-1 text-sm">
-                      <li>「30日間無料トライアル」という特典を強調</li>
-                      <li>「24時間サポート」という安心感を提供</li>
-                      <li>「5分で簡単設定」という手軽さを訴求</li>
-                    </ul>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      広告文を生成
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <TrendingUpIcon className="mt-0.5 h-5 w-5 text-emerald-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">新しい広告文の提案</p>
-                    <p className="text-sm text-muted-foreground">
-                      AIが生成した以下の広告文を追加することで、パフォーマンスを向上させることができます：
-                    </p>
-                    <div className="mt-2 space-y-4">
-                      <div className="rounded-md border p-3">
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium text-blue-600">
-                            ECサイト構築 | 30日間無料トライアル | 24時間サポート
-                          </div>
-                          <div className="text-sm text-green-700">example.com/ec-site</div>
-                          <div className="text-sm">5分で簡単設定。初心者でも安心のECサイト構築サービス。</div>
-                          <div className="text-sm">30日間無料トライアル実施中。24時間サポート対応。</div>
-                        </div>
-                      </div>
-                      <div className="rounded-md border p-3">
-                        <div className="space-y-1">
-                          <div className="text-sm font-medium text-blue-600">
-                            ネットショップ開設 | 初期費用0円 | 売上アップ保証
-                          </div>
-                          <div className="text-sm text-green-700">example.com/netshop</div>
-                          <div className="text-sm">初期費用0円でネットショップを今すぐ開設。簡単操作で売上アップ。</div>
-                          <div className="text-sm">満足度98%の実績。売上アップ保証付き。今なら特典あり。</div>
-                        </div>
-                      </div>
-                    </div>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      広告文を追加
-                    </Button>
-                  </div>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="flex items-start gap-3">
-                  <LightbulbIcon className="mt-0.5 h-5 w-5 text-amber-500" />
-                  <div className="space-y-1">
-                    <p className="font-medium">レスポンシブ検索広告への移行</p>
-                    <p className="text-sm text-muted-foreground">
-                      標準的なテキスト広告からレスポンシブ検索広告に移行することで、より多くの広告バリエーションをテストでき、CTRが平均15%向上する可能性があります。
-                    </p>
-                    <Button variant="outline" size="sm" className="mt-2">
-                      レスポンシブ広告を作成
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle>AI分析レポート</CardTitle>
-            <CardDescription>Gemini AIによる詳細な分析レポート</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="rounded-lg border p-4">
-                <div className="space-y-2">
-                  <p className="font-medium">キャンペーンパフォーマンス分析</p>
-                  <p className="text-sm text-muted-foreground">
-                    このキャンペーンの詳細なパフォーマンス分析と改善提案が含まれています。
-                  </p>
-                  <Button variant="outline" size="sm">
-                    レポートを表示
-                  </Button>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="space-y-2">
-                  <p className="font-medium">競合分析レポート</p>
-                  <p className="text-sm text-muted-foreground">
-                    業界内の競合他社の広告戦略とパフォーマンスを分析したレポートです。
-                  </p>
-                  <Button variant="outline" size="sm">
-                    レポートを表示
-                  </Button>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="space-y-2">
-                  <p className="font-medium">予測分析レポート</p>
-                  <p className="text-sm text-muted-foreground">
-                    今後30日間のパフォーマンス予測と最適な予算配分を分析したレポートです。
-                  </p>
-                  <Button variant="outline" size="sm">
-                    レポートを表示
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader>
-            <CardTitle>自動生成コンテンツ</CardTitle>
-            <CardDescription>AIによる自動生成コンテンツ</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="rounded-lg border p-4">
-                <div className="space-y-2">
-                  <p className="font-medium">広告文生成</p>
-                  <p className="text-sm text-muted-foreground">
-                    Gemini AIを使用して、高パフォーマンスな広告文を自動生成します。
-                  </p>
-                  <Button variant="outline" size="sm">
-                    広告文を生成
-                  </Button>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="space-y-2">
-                  <p className="font-medium">キーワード生成</p>
-                  <p className="text-sm text-muted-foreground">
-                    Gemini AIを使用して、関連性の高いキーワードを自動生成します。
-                  </p>
-                  <Button variant="outline" size="sm">
-                    キーワードを生成
-                  </Button>
-                </div>
-              </div>
-              <div className="rounded-lg border p-4">
-                <div className="space-y-2">
-                  <p className="font-medium">広告画像生成</p>
-                  <p className="text-sm text-muted-foreground">Imagen AIを使用して、広告用の画像を自動生成します。</p>
-                  <Button variant="outline" size="sm">
-                    画像を生成
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-2xl font-bold">AI-Powered Suggestions</h2>
+          <p className="text-muted-foreground">
+            Leverage Gemini AI to improve your campaign performance
+          </p>
+        </div>
       </div>
+
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid grid-cols-4 w-full">
+          <TabsTrigger value="adText" className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            <span>Ad Text</span>
+          </TabsTrigger>
+          <TabsTrigger value="keywords" className="flex items-center gap-2">
+            <Lightbulb className="h-4 w-4" />
+            <span>Keywords</span>
+          </TabsTrigger>
+          <TabsTrigger value="performance" className="flex items-center gap-2">
+            <BarChart className="h-4 w-4" />
+            <span>Performance</span>
+          </TabsTrigger>
+          <TabsTrigger value="optimization" className="flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            <span>Optimization</span>
+          </TabsTrigger>
+        </TabsList>
+
+        {/* Ad Text Suggestions */}
+        <TabsContent value="adText" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI-Generated Ad Text</CardTitle>
+              <CardDescription>
+                Generate compelling headlines and descriptions for your ads
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && activeTab === "adText" && (
+                <div className="bg-red-50 p-4 rounded-md mb-4 text-red-800">
+                  {error}
+                </div>
+              )}
+
+              {!adTextSuggestions ? (
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleGenerateAdText}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    {loading && activeTab === "adText" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        <span>Generate Ad Text</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-medium mb-2">Headlines</h3>
+                    <div className="space-y-2">
+                      {adTextSuggestions.headlines?.map((headline, index) => (
+                        <div
+                          key={index}
+                          className="p-3 bg-muted rounded-md flex justify-between items-center"
+                        >
+                          <p>{headline}</p>
+                          <Button variant="ghost" size="sm">
+                            Use
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-medium mb-2">Descriptions</h3>
+                    <div className="space-y-2">
+                      {adTextSuggestions.descriptions?.map(
+                        (description, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md flex justify-between items-center"
+                          >
+                            <p>{description}</p>
+                            <Button variant="ghost" size="sm">
+                              Use
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={handleGenerateAdText}
+                      disabled={loading}
+                      className="flex items-center gap-2"
+                    >
+                      {loading && activeTab === "adText" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span>Regenerate</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Keyword Suggestions */}
+        <TabsContent value="keywords" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI-Generated Keyword Suggestions</CardTitle>
+              <CardDescription>
+                Discover new keywords to expand your campaign reach
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && activeTab === "keywords" && (
+                <div className="bg-red-50 p-4 rounded-md mb-4 text-red-800">
+                  {error}
+                </div>
+              )}
+
+              {!keywordSuggestions ? (
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleGenerateKeywords}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    {loading && activeTab === "keywords" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Lightbulb className="h-4 w-4" />
+                        <span>Generate Keywords</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {keywordSuggestions.map((keyword, index) => (
+                      <div
+                        key={index}
+                        className="p-3 bg-muted rounded-md flex justify-between items-center"
+                      >
+                        <p>{keyword}</p>
+                        <Button variant="ghost" size="sm">
+                          Add
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={handleGenerateKeywords}
+                      disabled={loading}
+                      className="flex items-center gap-2"
+                    >
+                      {loading && activeTab === "keywords" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span>Regenerate</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Performance Analysis */}
+        <TabsContent value="performance" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Performance Analysis</CardTitle>
+              <CardDescription>
+                Get AI-powered insights on your campaign performance
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && activeTab === "performance" && (
+                <div className="bg-red-50 p-4 rounded-md mb-4 text-red-800">
+                  {error}
+                </div>
+              )}
+
+              {!performanceInsights ? (
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleAnalyzePerformance}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    {loading && activeTab === "performance" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Analyzing...</span>
+                      </>
+                    ) : (
+                      <>
+                        <BarChart className="h-4 w-4" />
+                        <span>Analyze Performance</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-medium mb-2">Key Insights</h3>
+                    <div className="space-y-2">
+                      {performanceInsights.insights.map((insight, index) => (
+                        <div key={index} className="p-3 bg-muted rounded-md">
+                          <p>{insight}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-medium mb-2">Recommendations</h3>
+                    <div className="space-y-2">
+                      {performanceInsights.recommendations.map(
+                        (recommendation, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md flex justify-between items-center"
+                          >
+                            <p>{recommendation}</p>
+                            <Button variant="ghost" size="sm">
+                              Apply
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={handleAnalyzePerformance}
+                      disabled={loading}
+                      className="flex items-center gap-2"
+                    >
+                      {loading && activeTab === "performance" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span>Refresh Analysis</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Optimization Suggestions */}
+        <TabsContent value="optimization" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI Optimization Suggestions</CardTitle>
+              <CardDescription>
+                Get AI-powered recommendations to optimize your campaign
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && activeTab === "optimization" && (
+                <div className="bg-red-50 p-4 rounded-md mb-4 text-red-800">
+                  {error}
+                </div>
+              )}
+
+              {!optimizationSuggestions ? (
+                <div className="flex justify-center">
+                  <Button
+                    onClick={handleGenerateOptimizations}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    {loading && activeTab === "optimization" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Target className="h-4 w-4" />
+                        <span>Generate Optimizations</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-medium mb-2">Budget Recommendations</h3>
+                    <div className="space-y-2">
+                      {optimizationSuggestions.budgetRecommendations.map(
+                        (recommendation, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md flex justify-between items-center"
+                          >
+                            <p>{recommendation}</p>
+                            <Button variant="ghost" size="sm">
+                              Apply
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-medium mb-2">
+                      Keyword Recommendations
+                    </h3>
+                    <div className="space-y-2">
+                      {optimizationSuggestions.keywordRecommendations.map(
+                        (recommendation, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md flex justify-between items-center"
+                          >
+                            <p>{recommendation}</p>
+                            <Button variant="ghost" size="sm">
+                              Apply
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-medium mb-2">
+                      Targeting Recommendations
+                    </h3>
+                    <div className="space-y-2">
+                      {optimizationSuggestions.targetingRecommendations.map(
+                        (recommendation, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md flex justify-between items-center"
+                          >
+                            <p>{recommendation}</p>
+                            <Button variant="ghost" size="sm">
+                              Apply
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div>
+                    <h3 className="font-medium mb-2">
+                      Structure Recommendations
+                    </h3>
+                    <div className="space-y-2">
+                      {optimizationSuggestions.structureRecommendations.map(
+                        (recommendation, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md flex justify-between items-center"
+                          >
+                            <p>{recommendation}</p>
+                            <Button variant="ghost" size="sm">
+                              Apply
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={handleGenerateOptimizations}
+                      disabled={loading}
+                      className="flex items-center gap-2"
+                    >
+                      {loading && activeTab === "optimization" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span>Refresh Optimizations</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
-  )
+  );
 }
