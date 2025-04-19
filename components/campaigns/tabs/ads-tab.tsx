@@ -1,18 +1,33 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { CopyIcon, MoreHorizontalIcon, PencilIcon, PlusIcon, TrashIcon } from "lucide-react"
+import { useState } from "react";
+import {
+  CopyIcon,
+  ImageIcon,
+  MoreHorizontalIcon,
+  PencilIcon,
+  PlusIcon,
+  RefreshCwIcon,
+  TrashIcon,
+} from "lucide-react";
+import { generateAdImage } from "@/lib/imagen-api";
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Dialog,
   DialogContent,
@@ -20,24 +35,34 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+} from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AdsTabProps {
-  campaignId: string
+  campaignId: string;
 }
 
 export function AdsTab({ campaignId }: AdsTabProps) {
-  const [newAdDialogOpen, setNewAdDialogOpen] = useState(false)
-  const [selectedAdGroup, setSelectedAdGroup] = useState<string | null>(null)
+  const [newAdDialogOpen, setNewAdDialogOpen] = useState(false);
+  const [selectedAdGroup, setSelectedAdGroup] = useState<string | null>(null);
+  const [isGeneratingImage, setIsGeneratingImage] = useState(false);
+  const [generatedImages, setGeneratedImages] = useState<string[]>([]);
+  const [selectedImagePrompt, setSelectedImagePrompt] = useState("");
+  const [imageError, setImageError] = useState<string | null>(null);
 
   // サンプルデータ
   const adGroups = [
     { id: "1", name: "商品A - 検索広告" },
     { id: "2", name: "商品B - 検索広告" },
     { id: "3", name: "ブランドキーワード" },
-  ]
+  ];
 
   const ads = [
     {
@@ -48,7 +73,8 @@ export function AdsTab({ campaignId }: AdsTabProps) {
       headline1: "高品質な商品A | 今だけ特別価格",
       headline2: "公式サイトで安心購入",
       headline3: "送料無料・即日発送",
-      description1: "高品質な商品Aを特別価格でご提供。公式サイトなら安心の保証付き。",
+      description1:
+        "高品質な商品Aを特別価格でご提供。公式サイトなら安心の保証付き。",
       description2: "今なら送料無料・即日発送。お問い合わせも24時間受付中。",
       displayUrl: "example.com/product-a",
       finalUrl: "https://example.com/products/product-a",
@@ -67,8 +93,10 @@ export function AdsTab({ campaignId }: AdsTabProps) {
       headline1: "商品A 公式サイト | 最新モデル入荷",
       headline2: "安心の品質保証付き",
       headline3: "24時間サポート対応",
-      description1: "最新モデルの商品Aが入荷しました。公式サイト限定の特典付き。",
-      description2: "安心の品質保証と24時間サポート対応。今なら送料無料でお届け。",
+      description1:
+        "最新モデルの商品Aが入荷しました。公式サイト限定の特典付き。",
+      description2:
+        "安心の品質保証と24時間サポート対応。今なら送料無料でお届け。",
       displayUrl: "example.com/new-product-a",
       finalUrl: "https://example.com/products/new-product-a",
       impressions: 7250,
@@ -105,7 +133,8 @@ export function AdsTab({ campaignId }: AdsTabProps) {
       headline1: "[ブランド名] 公式サイト",
       headline2: "安心の正規品・全国送料無料",
       headline3: "会員登録で10%オフ",
-      description1: "[ブランド名]の公式サイト。安心の正規品を全国送料無料でお届け。",
+      description1:
+        "[ブランド名]の公式サイト。安心の正規品を全国送料無料でお届け。",
       description2: "会員登録で今すぐ10%オフ。最新情報をいち早くお届けします。",
       displayUrl: "example.com",
       finalUrl: "https://example.com",
@@ -116,15 +145,21 @@ export function AdsTab({ campaignId }: AdsTabProps) {
       convRate: 4.58,
       cost: 95000,
     },
-  ]
+  ];
 
-  const filteredAds = selectedAdGroup ? ads.filter((ad) => ad.adGroupId === selectedAdGroup) : ads
+  const filteredAds = selectedAdGroup
+    ? ads.filter((ad) => ad.adGroupId === selectedAdGroup)
+    : ads;
 
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="w-full sm:w-auto">
-          <Select onValueChange={(value) => setSelectedAdGroup(value === "all" ? null : value)}>
+          <Select
+            onValueChange={(value) =>
+              setSelectedAdGroup(value === "all" ? null : value)
+            }
+          >
             <SelectTrigger className="w-full sm:w-[250px]">
               <SelectValue placeholder="すべての広告グループ" />
             </SelectTrigger>
@@ -153,7 +188,10 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                   <CardTitle>{ad.headline1}</CardTitle>
                   <CardDescription>
                     <div className="flex items-center gap-2">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700">
+                      <Badge
+                        variant="outline"
+                        className="bg-blue-50 text-blue-700"
+                      >
                         テキスト広告
                       </Badge>
                       <Badge
@@ -162,8 +200,8 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                           ad.status === "active"
                             ? "bg-green-50 text-green-700"
                             : ad.status === "paused"
-                              ? "bg-amber-50 text-amber-700"
-                              : "bg-gray-50 text-gray-700"
+                            ? "bg-amber-50 text-amber-700"
+                            : "bg-gray-50 text-gray-700"
                         }
                       >
                         {ad.status === "active" && "実行中"}
@@ -171,7 +209,10 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                         {ad.status === "draft" && "下書き"}
                       </Badge>
                       <span className="text-xs text-muted-foreground">
-                        {adGroups.find((group) => group.id === ad.adGroupId)?.name}
+                        {
+                          adGroups.find((group) => group.id === ad.adGroupId)
+                            ?.name
+                        }
                       </span>
                     </div>
                   </CardDescription>
@@ -208,7 +249,9 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                     <div className="text-sm font-medium text-blue-600">
                       {ad.headline1} | {ad.headline2} | {ad.headline3}
                     </div>
-                    <div className="text-sm text-green-700">{ad.displayUrl}</div>
+                    <div className="text-sm text-green-700">
+                      {ad.displayUrl}
+                    </div>
                     <div className="text-sm">{ad.description1}</div>
                     <div className="text-sm">{ad.description2}</div>
                   </div>
@@ -216,12 +259,18 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">インプレッション</span>
-                      <span className="font-medium">{ad.impressions.toLocaleString()}</span>
+                      <span className="text-muted-foreground">
+                        インプレッション
+                      </span>
+                      <span className="font-medium">
+                        {ad.impressions.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">クリック数</span>
-                      <span className="font-medium">{ad.clicks.toLocaleString()}</span>
+                      <span className="font-medium">
+                        {ad.clicks.toLocaleString()}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">CTR</span>
@@ -230,16 +279,24 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                   </div>
                   <div className="space-y-1">
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">コンバージョン</span>
+                      <span className="text-muted-foreground">
+                        コンバージョン
+                      </span>
                       <span className="font-medium">{ad.conversions}</span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
-                      <span className="text-muted-foreground">コンバージョン率</span>
-                      <span className="font-medium">{ad.convRate.toFixed(2)}%</span>
+                      <span className="text-muted-foreground">
+                        コンバージョン率
+                      </span>
+                      <span className="font-medium">
+                        {ad.convRate.toFixed(2)}%
+                      </span>
                     </div>
                     <div className="flex items-center justify-between text-sm">
                       <span className="text-muted-foreground">費用</span>
-                      <span className="font-medium">¥{ad.cost.toLocaleString()}</span>
+                      <span className="font-medium">
+                        ¥{ad.cost.toLocaleString()}
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -253,7 +310,9 @@ export function AdsTab({ campaignId }: AdsTabProps) {
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
             <DialogTitle>新規広告の追加</DialogTitle>
-            <DialogDescription>新しい広告を作成します。広告タイプを選択してください。</DialogDescription>
+            <DialogDescription>
+              新しい広告を作成します。広告タイプを選択してください。
+            </DialogDescription>
           </DialogHeader>
           <Tabs defaultValue="text">
             <TabsList className="grid w-full grid-cols-3">
@@ -269,7 +328,9 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                 </p>
                 <div className="rounded-md border p-4 mt-2">
                   <div className="space-y-2">
-                    <div className="text-sm font-medium text-blue-600">見出し1 | 見出し2 | 見出し3</div>
+                    <div className="text-sm font-medium text-blue-600">
+                      見出し1 | 見出し2 | 見出し3
+                    </div>
                     <div className="text-sm text-green-700">example.com</div>
                     <div className="text-sm">説明文1がここに表示されます。</div>
                     <div className="text-sm">説明文2がここに表示されます。</div>
@@ -281,29 +342,169 @@ export function AdsTab({ campaignId }: AdsTabProps) {
               <div className="space-y-2">
                 <p className="text-sm font-medium">レスポンシブ検索広告</p>
                 <p className="text-sm text-muted-foreground">
-                  複数の見出しと説明文を設定し、Google AIが最適な組み合わせを自動的に表示します。
+                  複数の見出しと説明文を設定し、Google
+                  AIが最適な組み合わせを自動的に表示します。
                 </p>
                 <div className="rounded-md border p-4 mt-2">
                   <div className="space-y-2">
-                    <div className="text-sm font-medium text-blue-600">見出し例1 | 見出し例2 | 見出し例3</div>
+                    <div className="text-sm font-medium text-blue-600">
+                      見出し例1 | 見出し例2 | 見出し例3
+                    </div>
                     <div className="text-sm text-green-700">example.com</div>
-                    <div className="text-sm">説明文例1がここに表示されます。</div>
-                    <div className="text-sm">説明文例2がここに表示されます。</div>
+                    <div className="text-sm">
+                      説明文例1がここに表示されます。
+                    </div>
+                    <div className="text-sm">
+                      説明文例2がここに表示されます。
+                    </div>
                   </div>
                 </div>
               </div>
             </TabsContent>
             <TabsContent value="image" className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">画像広告</p>
-                <p className="text-sm text-muted-foreground">
-                  ディスプレイネットワークに表示される画像広告です。様々なサイズの画像を設定できます。
-                </p>
-                <div className="rounded-md border p-4 mt-2 flex justify-center">
-                  <div className="w-[300px] h-[250px] bg-gray-100 flex items-center justify-center">
-                    <p className="text-sm text-muted-foreground">300 x 250 画像広告</p>
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium">画像広告</p>
+                  <p className="text-sm text-muted-foreground">
+                    ディスプレイネットワークに表示される画像広告です。AIを使って画像を生成するか、自分で画像をアップロードできます。
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">AIで画像を生成</p>
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="product-info"
+                        className="text-sm font-medium"
+                      >
+                        商品・サービス情報
+                      </label>
+                      <textarea
+                        id="product-info"
+                        className="min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        placeholder="例: 高品質な有機コーヒー豆、エチオピア産、深煎り"
+                        value={selectedImagePrompt}
+                        onChange={(e) => setSelectedImagePrompt(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setSelectedImagePrompt(
+                            "高品質な有機コーヒー豆、エチオピア産、深煎り"
+                          )
+                        }
+                      >
+                        コーヒー
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setSelectedImagePrompt(
+                            "プレミアムスキンケア製品、自然由来成分、敏感肌向け"
+                          )
+                        }
+                      >
+                        スキンケア
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setSelectedImagePrompt(
+                            "高性能ワイヤレスイヤホン、ノイズキャンセリング機能付き"
+                          )
+                        }
+                      >
+                        イヤホン
+                      </Button>
+                    </div>
+
+                    <Button
+                      onClick={async () => {
+                        if (!selectedImagePrompt) return;
+
+                        setIsGeneratingImage(true);
+                        setImageError(null);
+
+                        try {
+                          const images = await generateAdImage(
+                            selectedImagePrompt,
+                            "デジタル広告に興味のある25-45歳の消費者",
+                            "square"
+                          );
+                          setGeneratedImages(images);
+                        } catch (error) {
+                          console.error("Image generation error:", error);
+                          setImageError(
+                            "画像の生成中にエラーが発生しました。後でもう一度お試しください。"
+                          );
+                        } finally {
+                          setIsGeneratingImage(false);
+                        }
+                      }}
+                      disabled={isGeneratingImage || !selectedImagePrompt}
+                    >
+                      {isGeneratingImage ? (
+                        <>
+                          <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
+                          生成中...
+                        </>
+                      ) : (
+                        <>
+                          <ImageIcon className="mr-2 h-4 w-4" />
+                          画像を生成
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
+
+                {imageError && (
+                  <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+                    {imageError}
+                  </div>
+                )}
+
+                {generatedImages.length > 0 && (
+                  <div className="space-y-2">
+                    <p className="text-sm font-medium">生成された画像</p>
+                    <div className="grid grid-cols-2 gap-4">
+                      {generatedImages.map((image, index) => (
+                        <div key={index} className="rounded-md border p-2">
+                          <img
+                            src={`data:image/png;base64,${image}`}
+                            alt={`Generated ad image ${index + 1}`}
+                            className="w-full h-auto rounded"
+                          />
+                          <div className="flex justify-end mt-2">
+                            <Button variant="outline" size="sm">
+                              選択
+                            </Button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {!generatedImages.length && !isGeneratingImage && (
+                  <div className="rounded-md border p-4 mt-2 flex justify-center">
+                    <div className="w-[300px] h-[250px] bg-gray-100 flex items-center justify-center">
+                      <div className="text-center">
+                        <ImageIcon className="h-8 w-8 mx-auto text-muted-foreground" />
+                        <p className="text-sm text-muted-foreground mt-2">
+                          AIで画像を生成するか、画像をアップロードしてください
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
@@ -316,5 +517,5 @@ export function AdsTab({ campaignId }: AdsTabProps) {
         </DialogContent>
       </Dialog>
     </div>
-  )
+  );
 }

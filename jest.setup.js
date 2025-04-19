@@ -1,6 +1,6 @@
 // Learn more: https://github.com/testing-library/jest-dom
 import "@testing-library/jest-dom";
-import "@testing-library/jest-dom/extend-expect";
+// The extend-expect import is no longer needed in newer versions of jest-dom
 
 // Mock fetch globally
 global.fetch = jest.fn();
