@@ -32,10 +32,11 @@ export function CampaignTabs({ id }: CampaignTabsProps) {
       onValueChange={setActiveTab}
       className="space-y-4"
     >
-      <TabsList>
+      <TabsList className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
         <TabsTrigger value="ad-groups" className="flex items-center gap-2">
           <MousePointerClickIcon className="h-4 w-4" />
-          <span>広告グループ</span>
+          <span className="hidden sm:inline">広告グループ</span>
+          <span className="sm:hidden">グループ</span>
         </TabsTrigger>
         <TabsTrigger value="ads" className="flex items-center gap-2">
           <ImageIcon className="h-4 w-4" />
@@ -43,19 +44,23 @@ export function CampaignTabs({ id }: CampaignTabsProps) {
         </TabsTrigger>
         <TabsTrigger value="keywords" className="flex items-center gap-2">
           <SearchIcon className="h-4 w-4" />
-          <span>キーワード</span>
+          <span className="hidden sm:inline">キーワード</span>
+          <span className="sm:hidden">KW</span>
         </TabsTrigger>
         <TabsTrigger value="performance" className="flex items-center gap-2">
           <BarChart3Icon className="h-4 w-4" />
-          <span>パフォーマンス</span>
+          <span className="hidden sm:inline">パフォーマンス</span>
+          <span className="sm:hidden">分析</span>
         </TabsTrigger>
         <TabsTrigger value="ai-suggestions" className="flex items-center gap-2">
           <SparklesIcon className="h-4 w-4" />
-          <span>AI提案</span>
+          <span className="hidden sm:inline">AI提案</span>
+          <span className="sm:hidden">AI提案</span>
         </TabsTrigger>
         <TabsTrigger value="google-ads-ai" className="flex items-center gap-2">
           <BrainCircuitIcon className="h-4 w-4" />
-          <span>Google広告AI</span>
+          <span className="hidden sm:inline">Google広告AI</span>
+          <span className="sm:hidden">広告AI</span>
         </TabsTrigger>
       </TabsList>
       <TabsContent value="ad-groups" className="space-y-4">

@@ -112,18 +112,25 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold">Google広告 AI機能</h2>
-        <Button onClick={handleRefreshInsights} disabled={isLoading}>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <h2 className="text-xl sm:text-2xl font-bold">Google広告 AI機能</h2>
+        <Button
+          onClick={handleRefreshInsights}
+          disabled={isLoading}
+          size="sm"
+          className="sm:size-default w-full sm:w-auto"
+        >
           {isLoading ? (
             <>
               <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
-              更新中...
+              <span className="hidden sm:inline">更新中...</span>
+              <span className="sm:hidden">更新中</span>
             </>
           ) : (
             <>
               <RefreshCwIcon className="mr-2 h-4 w-4" />
-              インサイトを更新
+              <span className="hidden sm:inline">インサイトを更新</span>
+              <span className="sm:hidden">更新</span>
             </>
           )}
         </Button>
@@ -137,17 +144,31 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
 
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="bidding">
+          <TabsTrigger
+            value="bidding"
+            className="flex items-center justify-center"
+          >
             <BrainCircuitIcon className="mr-2 h-4 w-4" />
-            自動入札
+            <span className="hidden sm:inline">自動入札</span>
+            <span className="sm:hidden">入札</span>
           </TabsTrigger>
-          <TabsTrigger value="optimization">
+          <TabsTrigger
+            value="optimization"
+            className="flex items-center justify-center"
+          >
             <BarChart3Icon className="mr-2 h-4 w-4" />
-            パフォーマンス最適化
+            <span className="hidden sm:inline">パフォーマンス最適化</span>
+            <span className="sm:hidden">最適化</span>
           </TabsTrigger>
-          <TabsTrigger value="audience">
+          <TabsTrigger
+            value="audience"
+            className="flex items-center justify-center"
+          >
             <UsersIcon className="mr-2 h-4 w-4" />
-            オーディエンスターゲティング
+            <span className="hidden sm:inline">
+              オーディエンスターゲティング
+            </span>
+            <span className="sm:hidden">ターゲット</span>
           </TabsTrigger>
         </TabsList>
 
@@ -247,11 +268,12 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
                 </div>
               )}
 
-              <div className="rounded-md bg-blue-50 p-4">
-                <div className="flex">
-                  <BrainCircuitIcon className="h-5 w-5 text-blue-700" />
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-blue-700">
+              <div className="rounded-md bg-blue-50 p-3 sm:p-4">
+                <div className="flex flex-col sm:flex-row sm:items-start">
+                  <BrainCircuitIcon className="h-5 w-5 text-blue-700 hidden sm:block" />
+                  <div className="sm:ml-3">
+                    <h3 className="text-sm font-medium text-blue-700 flex items-center">
+                      <BrainCircuitIcon className="h-4 w-4 mr-1 sm:hidden text-blue-700" />
                       AIによる入札最適化の予測
                     </h3>
                     <div className="mt-2 text-sm text-blue-700">
@@ -454,22 +476,41 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
                       key={suggestion.id}
                       className="rounded-md border p-3 space-y-2"
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                         <div>
-                          <h4 className="font-medium">{suggestion.title}</h4>
+                          <div className="flex items-center justify-between sm:justify-start">
+                            <h4 className="font-medium">{suggestion.title}</h4>
+                            <Badge
+                              variant="outline"
+                              className={`ml-2 sm:ml-3 sm:hidden ${
+                                suggestion.impact === "high"
+                                  ? "bg-green-50 text-green-700"
+                                  : suggestion.impact === "medium"
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "bg-gray-50 text-gray-700"
+                              }`}
+                            >
+                              影響度:{" "}
+                              {suggestion.impact === "high"
+                                ? "高"
+                                : suggestion.impact === "medium"
+                                ? "中"
+                                : "低"}
+                            </Badge>
+                          </div>
                           <p className="text-sm text-muted-foreground">
                             {suggestion.description}
                           </p>
                         </div>
                         <Badge
                           variant="outline"
-                          className={
+                          className={`hidden sm:inline-flex ${
                             suggestion.impact === "high"
                               ? "bg-green-50 text-green-700"
                               : suggestion.impact === "medium"
                               ? "bg-blue-50 text-blue-700"
                               : "bg-gray-50 text-gray-700"
-                          }
+                          }`}
                         >
                           影響度:{" "}
                           {suggestion.impact === "high"
@@ -610,13 +651,31 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
                       key={audience.id}
                       className="rounded-md border p-3 space-y-2"
                     >
-                      <div className="flex items-start justify-between">
+                      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
                         <div>
-                          <h4 className="font-medium">{audience.name}</h4>
+                          <div className="flex items-center justify-between sm:justify-start">
+                            <h4 className="font-medium">{audience.name}</h4>
+                            <Badge
+                              variant="outline"
+                              className={`ml-2 sm:hidden ${
+                                audience.status === "active"
+                                  ? "bg-green-50 text-green-700"
+                                  : audience.status === "recommended"
+                                  ? "bg-blue-50 text-blue-700"
+                                  : "bg-gray-50 text-gray-700"
+                              }`}
+                            >
+                              {audience.status === "active"
+                                ? "アクティブ"
+                                : audience.status === "recommended"
+                                ? "推奨"
+                                : "非アクティブ"}
+                            </Badge>
+                          </div>
                           <p className="text-sm text-muted-foreground">
                             {audience.description}
                           </p>
-                          <div className="flex items-center space-x-2 mt-1">
+                          <div className="flex flex-wrap items-center gap-2 mt-1">
                             <Badge
                               variant="outline"
                               className="bg-blue-50 text-blue-700"
@@ -649,13 +708,13 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
                         </div>
                         <Badge
                           variant="outline"
-                          className={
+                          className={`hidden sm:inline-flex ${
                             audience.status === "active"
                               ? "bg-green-50 text-green-700"
                               : audience.status === "recommended"
                               ? "bg-blue-50 text-blue-700"
                               : "bg-gray-50 text-gray-700"
-                          }
+                          }`}
                         >
                           {audience.status === "active"
                             ? "アクティブ"
@@ -671,16 +730,20 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
                             variant="outline"
                             onClick={() => handleRemoveAudience(audience.id)}
                             disabled={!isAIAudienceEnabled}
+                            className="w-full sm:w-auto"
                           >
-                            削除
+                            <span className="hidden sm:inline">削除</span>
+                            <span className="sm:hidden">削除</span>
                           </Button>
                         ) : (
                           <Button
                             size="sm"
                             onClick={() => handleAddAudience(audience.id)}
                             disabled={!isAIAudienceEnabled}
+                            className="w-full sm:w-auto"
                           >
-                            追加する
+                            <span className="hidden sm:inline">追加する</span>
+                            <span className="sm:hidden">追加</span>
                           </Button>
                         )}
                       </div>
@@ -697,8 +760,12 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
                     .filter((a) => a.status === "recommended")
                     .forEach((a) => addAudience(a.id));
                 }}
+                className="w-full sm:w-auto"
               >
-                すべての推奨オーディエンスを追加
+                <span className="hidden sm:inline">
+                  すべての推奨オーディエンスを追加
+                </span>
+                <span className="sm:hidden">すべて追加</span>
               </Button>
             </CardFooter>
           </Card>
@@ -765,8 +832,14 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
               </div>
             </CardContent>
             <CardFooter>
-              <Button disabled={!isAIAudienceEnabled}>
-                類似オーディエンスを作成
+              <Button
+                disabled={!isAIAudienceEnabled}
+                className="w-full sm:w-auto"
+              >
+                <span className="hidden sm:inline">
+                  類似オーディエンスを作成
+                </span>
+                <span className="sm:hidden">作成</span>
               </Button>
             </CardFooter>
           </Card>

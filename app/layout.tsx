@@ -10,6 +10,7 @@ import { AuthProvider } from "@/lib/auth-context";
 import { QueryProvider } from "@/lib/providers/query-provider";
 import { Notifications } from "@/components/ui/notifications";
 import { MainNav } from "@/components/main-nav";
+import { MobileNav } from "@/components/mobile-nav";
 import { UserNav } from "@/components/user-nav";
 import { Button } from "@/components/ui/button";
 
@@ -41,6 +42,7 @@ export default function RootLayout({
               <div className="flex min-h-screen flex-col">
                 <header className="sticky top-0 z-50 w-full border-b bg-background">
                   <div className="container flex h-16 items-center">
+                    <MobileNav />
                     <div className="flex items-center gap-2 font-bold">
                       <SparklesIcon className="h-5 w-5 text-primary" />
                       <span>AdGenius AI</span>
@@ -49,7 +51,7 @@ export default function RootLayout({
                       <MainNav />
                     </div>
                     <div className="ml-auto flex items-center space-x-4">
-                      <Button>
+                      <Button className="hidden md:flex">
                         <PlusCircleIcon className="mr-2 h-4 w-4" />
                         新規キャンペーン
                       </Button>
