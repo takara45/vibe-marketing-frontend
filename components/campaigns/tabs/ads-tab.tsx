@@ -8,9 +8,11 @@ import {
   PencilIcon,
   PlusIcon,
   RefreshCwIcon,
+  TextIcon,
   TrashIcon,
 } from "lucide-react";
 import { generateAdImage } from "@/lib/imagen-api";
+import { generateAdText } from "@/lib/gemini-api";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -52,10 +54,24 @@ interface AdsTabProps {
 export function AdsTab({ campaignId }: AdsTabProps) {
   const [newAdDialogOpen, setNewAdDialogOpen] = useState(false);
   const [selectedAdGroup, setSelectedAdGroup] = useState<string | null>(null);
+
+  // Image generation states
   const [isGeneratingImage, setIsGeneratingImage] = useState(false);
   const [generatedImages, setGeneratedImages] = useState<string[]>([]);
   const [selectedImagePrompt, setSelectedImagePrompt] = useState("");
   const [imageError, setImageError] = useState<string | null>(null);
+
+  // Text generation states
+  const [isGeneratingText, setIsGeneratingText] = useState(false);
+  const [generatedAdText, setGeneratedAdText] = useState<{
+    headlines?: string[];
+    descriptions?: string[];
+  }>({});
+  const [textProductInfo, setTextProductInfo] = useState("");
+  const [textTargetAudience, setTextTargetAudience] = useState(
+    "デジタル広告に興味のある25-45歳の消費者"
+  );
+  const [textError, setTextError] = useState<string | null>(null);
 
   // サンプルデータ
   const adGroups = [
@@ -321,21 +337,230 @@ export function AdsTab({ campaignId }: AdsTabProps) {
               <TabsTrigger value="image">画像広告</TabsTrigger>
             </TabsList>
             <TabsContent value="text" className="space-y-4 pt-4">
-              <div className="space-y-2">
-                <p className="text-sm font-medium">テキスト広告</p>
-                <p className="text-sm text-muted-foreground">
-                  検索結果に表示される標準的なテキスト広告です。見出し、説明文、URLを設定できます。
-                </p>
-                <div className="rounded-md border p-4 mt-2">
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-blue-600">
-                      見出し1 | 見出し2 | 見出し3
+              <div className="space-y-4">
+                <div>
+                  <p className="text-sm font-medium">テキスト広告</p>
+                  <p className="text-sm text-muted-foreground">
+                    検索結果に表示される標準的なテキスト広告です。見出し、説明文、URLを設定できます。
+                  </p>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium">AIで広告テキストを生成</p>
+                  <div className="grid gap-4">
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="text-product-info"
+                        className="text-sm font-medium"
+                      >
+                        商品・サービス情報
+                      </label>
+                      <textarea
+                        id="text-product-info"
+                        className="min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        placeholder="例: 高品質な有機コーヒー豆、エチオピア産、深煎り"
+                        value={textProductInfo}
+                        onChange={(e) => setTextProductInfo(e.target.value)}
+                      />
                     </div>
-                    <div className="text-sm text-green-700">example.com</div>
-                    <div className="text-sm">説明文1がここに表示されます。</div>
-                    <div className="text-sm">説明文2がここに表示されます。</div>
+
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="text-target-audience"
+                        className="text-sm font-medium"
+                      >
+                        ターゲットオーディエンス
+                      </label>
+                      <textarea
+                        id="text-target-audience"
+                        className="min-h-[60px] rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background"
+                        placeholder="例: デジタル広告に興味のある25-45歳の消費者"
+                        value={textTargetAudience}
+                        onChange={(e) => setTextTargetAudience(e.target.value)}
+                      />
+                    </div>
+
+                    <div className="flex flex-wrap gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setTextProductInfo(
+                            "高品質な有機コーヒー豆、エチオピア産、深煎り"
+                          )
+                        }
+                      >
+                        コーヒー
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setTextProductInfo(
+                            "プレミアムスキンケア製品、自然由来成分、敏感肌向け"
+                          )
+                        }
+                      >
+                        スキンケア
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() =>
+                          setTextProductInfo(
+                            "高性能ワイヤレスイヤホン、ノイズキャンセリング機能付き"
+                          )
+                        }
+                      >
+                        イヤホン
+                      </Button>
+                    </div>
+
+                    <Button
+                      onClick={async () => {
+                        if (!textProductInfo) return;
+
+                        setIsGeneratingText(true);
+                        setTextError(null);
+
+                        try {
+                          const adText = await generateAdText(
+                            textProductInfo,
+                            textTargetAudience,
+                            "both"
+                          );
+                          setGeneratedAdText(adText);
+                        } catch (error) {
+                          console.error("Text generation error:", error);
+                          setTextError(
+                            "広告テキストの生成中にエラーが発生しました。後でもう一度お試しください。"
+                          );
+                        } finally {
+                          setIsGeneratingText(false);
+                        }
+                      }}
+                      disabled={isGeneratingText || !textProductInfo}
+                    >
+                      {isGeneratingText ? (
+                        <>
+                          <RefreshCwIcon className="mr-2 h-4 w-4 animate-spin" />
+                          生成中...
+                        </>
+                      ) : (
+                        <>
+                          <TextIcon className="mr-2 h-4 w-4" />
+                          広告テキストを生成
+                        </>
+                      )}
+                    </Button>
                   </div>
                 </div>
+
+                {textError && (
+                  <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">
+                    {textError}
+                  </div>
+                )}
+
+                {generatedAdText.headlines &&
+                  generatedAdText.headlines.length > 0 && (
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <p className="text-sm font-medium">生成された見出し</p>
+                        <div className="grid gap-2">
+                          {generatedAdText.headlines.map((headline, index) => (
+                            <div
+                              key={`headline-${index}`}
+                              className="rounded-md border p-3"
+                            >
+                              <div className="flex justify-between items-center">
+                                <div className="text-sm font-medium text-blue-600">
+                                  {headline}
+                                </div>
+                                <Button variant="ghost" size="sm">
+                                  <CopyIcon className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {generatedAdText.descriptions &&
+                        generatedAdText.descriptions.length > 0 && (
+                          <div className="space-y-2">
+                            <p className="text-sm font-medium">
+                              生成された説明文
+                            </p>
+                            <div className="grid gap-2">
+                              {generatedAdText.descriptions.map(
+                                (description, index) => (
+                                  <div
+                                    key={`description-${index}`}
+                                    className="rounded-md border p-3"
+                                  >
+                                    <div className="flex justify-between items-center">
+                                      <div className="text-sm">
+                                        {description}
+                                      </div>
+                                      <Button variant="ghost" size="sm">
+                                        <CopyIcon className="h-4 w-4" />
+                                      </Button>
+                                    </div>
+                                  </div>
+                                )
+                              )}
+                            </div>
+                          </div>
+                        )}
+
+                      <div className="rounded-md border p-4 mt-2">
+                        <p className="text-sm font-medium mb-2">プレビュー</p>
+                        <div className="space-y-2">
+                          <div className="text-sm font-medium text-blue-600">
+                            {generatedAdText.headlines &&
+                            generatedAdText.headlines.length > 0
+                              ? generatedAdText.headlines
+                                  .slice(0, 3)
+                                  .join(" | ")
+                              : "見出し1 | 見出し2 | 見出し3"}
+                          </div>
+                          <div className="text-sm text-green-700">
+                            example.com
+                          </div>
+                          <div className="text-sm">
+                            {generatedAdText.descriptions &&
+                            generatedAdText.descriptions.length > 0
+                              ? generatedAdText.descriptions[0]
+                              : "説明文1がここに表示されます。"}
+                          </div>
+                          <div className="text-sm">
+                            {generatedAdText.descriptions &&
+                            generatedAdText.descriptions.length > 1
+                              ? generatedAdText.descriptions[1]
+                              : "説明文2がここに表示されます。"}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {!generatedAdText.headlines && !isGeneratingText && (
+                  <div className="rounded-md border p-4 mt-2">
+                    <div className="space-y-2">
+                      <div className="text-sm font-medium text-blue-600">
+                        見出し1 | 見出し2 | 見出し3
+                      </div>
+                      <div className="text-sm text-green-700">example.com</div>
+                      <div className="text-sm">
+                        説明文1がここに表示されます。
+                      </div>
+                      <div className="text-sm">
+                        説明文2がここに表示されます。
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             </TabsContent>
             <TabsContent value="responsive" className="space-y-4 pt-4">
