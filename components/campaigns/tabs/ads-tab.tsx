@@ -462,6 +462,7 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                   </div>
                 )}
 
+                {/* 生成された見出しと説明文の表示 */}
                 {generatedAdText.headlines &&
                   generatedAdText.headlines.length > 0 && (
                     <div className="space-y-4">
@@ -513,54 +514,34 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                             </div>
                           </div>
                         )}
-
-                      <div className="rounded-md border p-4 mt-2">
-                        <p className="text-sm font-medium mb-2">プレビュー</p>
-                        <div className="space-y-2">
-                          <div className="text-sm font-medium text-blue-600">
-                            {generatedAdText.headlines &&
-                            generatedAdText.headlines.length > 0
-                              ? generatedAdText.headlines
-                                  .slice(0, 3)
-                                  .join(" | ")
-                              : "見出し1 | 見出し2 | 見出し3"}
-                          </div>
-                          <div className="text-sm text-green-700">
-                            example.com
-                          </div>
-                          <div className="text-sm">
-                            {generatedAdText.descriptions &&
-                            generatedAdText.descriptions.length > 0
-                              ? generatedAdText.descriptions[0]
-                              : "説明文1がここに表示されます。"}
-                          </div>
-                          <div className="text-sm">
-                            {generatedAdText.descriptions &&
-                            generatedAdText.descriptions.length > 1
-                              ? generatedAdText.descriptions[1]
-                              : "説明文2がここに表示されます。"}
-                          </div>
-                        </div>
-                      </div>
                     </div>
                   )}
 
-                {!generatedAdText.headlines && !isGeneratingText && (
-                  <div className="rounded-md border p-4 mt-2">
-                    <div className="space-y-2">
-                      <div className="text-sm font-medium text-blue-600">
-                        見出し1 | 見出し2 | 見出し3
-                      </div>
-                      <div className="text-sm text-green-700">example.com</div>
-                      <div className="text-sm">
-                        説明文1がここに表示されます。
-                      </div>
-                      <div className="text-sm">
-                        説明文2がここに表示されます。
-                      </div>
+                {/* プレビューセクション - 常に表示 */}
+                <div className="rounded-md border p-4 mt-4 bg-white">
+                  <p className="text-sm font-medium mb-2">プレビュー</p>
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-blue-600">
+                      {generatedAdText.headlines &&
+                      generatedAdText.headlines.length > 0
+                        ? generatedAdText.headlines.slice(0, 3).join(" | ")
+                        : "見出し1 | 見出し2 | 見出し3"}
+                    </div>
+                    <div className="text-sm text-green-700">example.com</div>
+                    <div className="text-sm">
+                      {generatedAdText.descriptions &&
+                      generatedAdText.descriptions.length > 0
+                        ? generatedAdText.descriptions[0]
+                        : "説明文1がここに表示されます。"}
+                    </div>
+                    <div className="text-sm">
+                      {generatedAdText.descriptions &&
+                      generatedAdText.descriptions.length > 1
+                        ? generatedAdText.descriptions[1]
+                        : "説明文2がここに表示されます。"}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
             </TabsContent>
             <TabsContent value="responsive" className="space-y-4 pt-4">
