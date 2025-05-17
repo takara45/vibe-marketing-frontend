@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { GenerateImagesResponse, GoogleGenAI } from "@google/genai";
 
 // Imagen API configuration from environment variables
 const IMAGEN_API_KEY =
@@ -9,34 +10,46 @@ const IMAGEN_API_URL =
 const IMAGEN_MODEL =
   process.env.NEXT_PUBLIC_IMAGEN_MODEL || "imagegeneration@005";
 
-// For debugging test environment variables
-if (process.env.NODE_ENV === "test") {
-  console.log("Test environment variables:");
-  console.log("IMAGEN_API_KEY:", process.env.NEXT_PUBLIC_IMAGEN_API_KEY);
-  console.log("IMAGEN_API_URL:", process.env.NEXT_PUBLIC_IMAGEN_API_URL);
-  console.log("IMAGEN_MODEL:", process.env.NEXT_PUBLIC_IMAGEN_MODEL);
-}
+const ai = new GoogleGenAI({ apiKey: IMAGEN_API_KEY });
 
-// Schema for Imagen API request
+// Schema for Imagen API request based on Imagen 3.0 documentation
 const imagenRequestSchema = z.object({
-  prompt: z.object({
-    text: z.string(),
-  }),
-  sampleCount: z.number().optional(),
-  sampleImageSize: z
+  contents: z.array(
+    z.object({
+      role: z.string(),
+      parts: z.array(
+        z.object({
+          text: z.string(),
+        })
+      ),
+    })
+  ),
+  generationConfig: z
     .object({
-      width: z.number(),
-      height: z.number(),
+      sampleCount: z.number().optional(),
+      sampleImageSize: z
+        .object({
+          width: z.number(),
+          height: z.number(),
+        })
+        .optional(),
     })
     .optional(),
 });
 
-// Schema for Imagen API response
+// Schema for Imagen API response based on Imagen 3.0 documentation
 const imagenResponseSchema = z.object({
   candidates: z.array(
     z.object({
-      image: z.object({
-        bytesBase64Encoded: z.string(),
+      content: z.object({
+        parts: z.array(
+          z.object({
+            inlineData: z.object({
+              mimeType: z.string(),
+              data: z.string(), // Base64 encoded image data
+            }),
+          })
+        ),
       }),
     })
   ),
@@ -56,62 +69,41 @@ export async function callImagenAPI(
     width?: number;
     height?: number;
   }
-): Promise<string[]> {
-  // For tests, we need to ensure the URL is constructed with the test environment variables
-  console.log("Using API URL:", IMAGEN_API_URL);
-  console.log("Using Model:", IMAGEN_MODEL);
-  console.log("Using API Key:", IMAGEN_API_KEY);
-
-  let url;
-  if (IMAGEN_API_URL.includes("test-api-url.com")) {
-    // For tests, use a URL format that matches test expectations
-    url = `${IMAGEN_API_URL}/${IMAGEN_MODEL}?key=${IMAGEN_API_KEY}`;
-  } else {
-    // For production, use the standard URL format
-    url = `${IMAGEN_API_URL}/${IMAGEN_MODEL}:generateContent?key=${IMAGEN_API_KEY}`;
-  }
-
-  const request: ImagenRequest = {
-    prompt: {
-      text: prompt,
-    },
-    sampleCount: options?.sampleCount || 1,
-    sampleImageSize: {
-      width: options?.width || 1024,
-      height: options?.height || 1024,
-    },
-  };
-
+): Promise<GenerateImagesResponse> {
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(request),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Imagen API error: ${response.status} ${errorText}`);
+    // Configure aspect ratio based on width and height if provided
+    let aspectRatio: string | undefined;
+    if (options?.width && options?.height) {
+      // Calculate the aspect ratio as width:height
+      const gcd = (a: number, b: number): number =>
+        b === 0 ? a : gcd(b, a % b);
+      const divisor = gcd(options.width, options.height);
+      aspectRatio = `${options.width / divisor}:${options.height / divisor}`;
     }
 
-    const data = await response.json();
-    const validatedData = imagenResponseSchema.parse(data);
+    // Generate the image using the Google GenAI SDK
+    const response = await ai.models.generateImages({
+      model: IMAGEN_MODEL,
+      prompt: prompt,
+      config: {
+        numberOfImages: options?.sampleCount || 1,
+        includeRaiReason: true,
+        aspectRatio: aspectRatio,
+        includeSafetyAttributes: true,
+      },
+    });
 
-    // Return array of base64 encoded images
-    return validatedData.candidates.map(
-      (candidate) => candidate.image.bytesBase64Encoded
-    );
+    return response;
   } catch (error) {
-    console.error("Error calling Imagen API:", error);
+    console.error("Imagen API error:", error);
+    console.error("Imagen API request parameters:", {
+      prompt,
+      options: options ? JSON.stringify(options) : undefined,
+    });
     throw error;
   }
 }
 
-/**
- * Generate ad images based on product/service information and target audience
- */
 export async function generateAdImage(
   productInfo: string,
   targetAudience: string,
@@ -153,7 +145,20 @@ Target Audience: ${targetAudience}
 
   prompt += `\nThe image should be visually appealing, professional, and clearly communicate the value proposition. It should be suitable for digital advertising.`;
 
-  return callImagenAPI(prompt, { width, height });
+  const response = await callImagenAPI(prompt, { width, height });
+
+  // Extract image data from the response
+  const imageDataArray: string[] = [];
+
+  if (response.generatedImages) {
+    for (const generatedImage of response.generatedImages) {
+      if (generatedImage.image?.imageBytes) {
+        imageDataArray.push(generatedImage.image.imageBytes);
+      }
+    }
+  }
+
+  return imageDataArray;
 }
 
 /**

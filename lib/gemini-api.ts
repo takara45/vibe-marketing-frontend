@@ -95,7 +95,11 @@ export async function callGeminiAPI(
 
     return validatedData.candidates[0].content.parts[0].text;
   } catch (error) {
-    console.error("Error calling Gemini API:", error);
+    console.error("Gemini API error:", error);
+    console.error("Gemini API request parameters:", {
+      prompt,
+      options: options ? JSON.stringify(options) : undefined,
+    });
     throw error;
   }
 }
