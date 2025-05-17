@@ -1,52 +1,13 @@
-import { z } from "zod";
+import { GoogleGenAI, HarmCategory, HarmBlockThreshold } from "@google/genai";
 
 // Gemini API configuration from environment variables
 const GEMINI_API_KEY =
   process.env.NEXT_PUBLIC_GEMINI_API_KEY || "DUMMY_API_KEY";
-const GEMINI_API_URL =
-  process.env.NEXT_PUBLIC_GEMINI_API_URL ||
-  "https://generativelanguage.googleapis.com/v1beta/models";
-const GEMINI_MODEL = process.env.NEXT_PUBLIC_GEMINI_MODEL || "gemini-pro";
+const GEMINI_MODEL =
+  process.env.NEXT_PUBLIC_GEMINI_MODEL || "gemini-2.0-flash-live-001";
 
-// Schema for Gemini API request
-const geminiRequestSchema = z.object({
-  contents: z.array(
-    z.object({
-      parts: z.array(
-        z.object({
-          text: z.string(),
-        })
-      ),
-    })
-  ),
-  generationConfig: z
-    .object({
-      temperature: z.number().optional(),
-      topP: z.number().optional(),
-      topK: z.number().optional(),
-      maxOutputTokens: z.number().optional(),
-    })
-    .optional(),
-});
-
-// Schema for Gemini API response
-const geminiResponseSchema = z.object({
-  candidates: z.array(
-    z.object({
-      content: z.object({
-        parts: z.array(
-          z.object({
-            text: z.string(),
-          })
-        ),
-      }),
-    })
-  ),
-});
-
-// Type definitions
-export type GeminiRequest = z.infer<typeof geminiRequestSchema>;
-export type GeminiResponse = z.infer<typeof geminiResponseSchema>;
+// Initialize the Google Generative AI client
+const genAI = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 /**
  * Base function to make requests to the Gemini API
@@ -58,42 +19,19 @@ export async function callGeminiAPI(
     maxOutputTokens?: number;
   }
 ): Promise<string> {
-  const url = `${GEMINI_API_URL}/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
-
-  const request: GeminiRequest = {
-    contents: [
-      {
-        parts: [
-          {
-            text: prompt,
-          },
-        ],
-      },
-    ],
-    generationConfig: {
-      temperature: options?.temperature || 0.7,
-      maxOutputTokens: options?.maxOutputTokens || 1024,
-    },
-  };
-
   try {
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
+    // Generate content using the Google GenAI SDK
+    const result = await genAI.models.generateContent({
+      model: GEMINI_MODEL,
+      contents: prompt,
+      config: {
+        temperature: options?.temperature || 0.7,
+        maxOutputTokens: options?.maxOutputTokens || 1024,
       },
-      body: JSON.stringify(request),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Gemini API error: ${response.status} ${errorText}`);
-    }
-
-    const data = await response.json();
-    const validatedData = geminiResponseSchema.parse(data);
-
-    return validatedData.candidates[0].content.parts[0].text;
+    // Extract text from the response
+    return result.text || "";
   } catch (error) {
     console.error("Gemini API error:", error);
     console.error("Gemini API request parameters:", {
