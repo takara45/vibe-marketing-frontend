@@ -4,6 +4,7 @@ import {
   generateKeywordSuggestions,
   analyzePerformance,
   generateOptimizationSuggestions,
+  generateResponsePartAds,
 } from "@/lib/gemini-api";
 import "@testing-library/jest-dom";
 
@@ -170,6 +171,58 @@ describe("Gemini API Client", () => {
       expect(url).toContain("test-model");
       expect(url).toContain("test-api-key");
       expect(url).toContain("test-api-url.com");
+    });
+
+    describe("generateResponsePartAds", () => {
+      it("should call fetch with the correct URL and parameters", async () => {
+        await generateResponsePartAds("Product", "Audience", {
+          keywords: ["test", "example"],
+          tone: "professional",
+        });
+
+        expect(global.fetch).toHaveBeenCalledTimes(1);
+        const [url, config] = (global.fetch as jest.Mock).mock.calls[0];
+
+        // Verify environment variables are used
+        expect(url).toContain("test-model");
+        expect(url).toContain("test-api-key");
+        expect(url).toContain("test-api-url.com");
+
+        // Check request body contains keywords and tone
+        const body = JSON.parse(config.body);
+        expect(body.contents[0].parts[0].text).toContain(
+          "Keywords to include: test, example"
+        );
+        expect(body.contents[0].parts[0].text).toContain("Tone: professional");
+      });
+
+      it("should parse response parts correctly", async () => {
+        // Mock a specific response for this test
+        (global.fetch as jest.Mock).mockResolvedValueOnce({
+          ok: true,
+          json: async () => ({
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    {
+                      text: "Sign up today for exclusive benefits\nTry our free demo now\nLimited time offer - Act now",
+                    },
+                  ],
+                },
+              },
+            ],
+          }),
+        });
+
+        const result = await generateResponsePartAds("Product", "Audience");
+
+        expect(result).toEqual([
+          "Sign up today for exclusive benefits",
+          "Try our free demo now",
+          "Limited time offer - Act now",
+        ]);
+      });
     });
   });
 });

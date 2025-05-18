@@ -24,6 +24,7 @@ import {
   generateKeywordSuggestions,
   analyzePerformance,
   generateOptimizationSuggestions,
+  generateResponsePartAds,
 } from "@/lib/gemini-api";
 
 interface AiSuggestionsTabProps {
@@ -36,6 +37,7 @@ export function AiSuggestionsTab({
   campaignData,
 }: AiSuggestionsTabProps) {
   const [activeTab, setActiveTab] = useState("adText");
+  const [responsePartTab, setResponsePartTab] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -43,6 +45,7 @@ export function AiSuggestionsTab({
   const [adTextSuggestions, setAdTextSuggestions] = useState<{
     headlines?: string[];
     descriptions?: string[];
+    responseParts?: string[];
   } | null>(null);
 
   const [keywordSuggestions, setKeywordSuggestions] = useState<string[] | null>(
@@ -277,10 +280,14 @@ export function AiSuggestionsTab({
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-4 w-full">
+        <TabsList className="grid grid-cols-5 w-full">
           <TabsTrigger value="adText" className="flex items-center gap-2">
             <Sparkles className="h-4 w-4" />
             <span>Ad Text</span>
+          </TabsTrigger>
+          <TabsTrigger value="responsePart" className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4" />
+            <span>Response Parts</span>
           </TabsTrigger>
           <TabsTrigger value="keywords" className="flex items-center gap-2">
             <Lightbulb className="h-4 w-4" />
@@ -380,6 +387,122 @@ export function AiSuggestionsTab({
                       className="flex items-center gap-2"
                     >
                       {loading && activeTab === "adText" ? (
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                      ) : (
+                        <RefreshCw className="h-4 w-4" />
+                      )}
+                      <span>Regenerate</span>
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Response Part Suggestions */}
+        <TabsContent value="responsePart" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>AI-Generated Response Part Ads</CardTitle>
+              <CardDescription>
+                Generate compelling response part advertisements for your ads
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {error && activeTab === "responsePart" && (
+                <div className="bg-red-50 p-4 rounded-md mb-4 text-red-800">
+                  {error}
+                </div>
+              )}
+
+              {!adTextSuggestions?.responseParts ? (
+                <div className="flex justify-center">
+                  <Button
+                    onClick={async () => {
+                      setLoading(true);
+                      setError(null);
+                      try {
+                        const data = campaignData || mockCampaignData;
+                        const result = await generateAdText(
+                          data.description,
+                          data.targetAudience,
+                          "responsePart"
+                        );
+                        setAdTextSuggestions(result);
+                      } catch (err) {
+                        setError(
+                          "Failed to generate response part ads. Please try again."
+                        );
+                        console.error(err);
+                      } finally {
+                        setLoading(false);
+                      }
+                    }}
+                    disabled={loading}
+                    className="flex items-center gap-2"
+                  >
+                    {loading && activeTab === "responsePart" ? (
+                      <>
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span>Generating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="h-4 w-4" />
+                        <span>Generate Response Parts</span>
+                      </>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div>
+                    <h3 className="font-medium mb-2">Response Part Ads</h3>
+                    <div className="space-y-2">
+                      {adTextSuggestions.responseParts?.map(
+                        (responsePart, index) => (
+                          <div
+                            key={index}
+                            className="p-3 bg-muted rounded-md flex justify-between items-center"
+                          >
+                            <p>{responsePart}</p>
+                            <Button variant="ghost" size="sm">
+                              Use
+                            </Button>
+                          </div>
+                        )
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end">
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        setLoading(true);
+                        setError(null);
+                        try {
+                          const data = campaignData || mockCampaignData;
+                          const result = await generateAdText(
+                            data.description,
+                            data.targetAudience,
+                            "responsePart"
+                          );
+                          setAdTextSuggestions(result);
+                        } catch (err) {
+                          setError(
+                            "Failed to generate response part ads. Please try again."
+                          );
+                          console.error(err);
+                        } finally {
+                          setLoading(false);
+                        }
+                      }}
+                      disabled={loading}
+                      className="flex items-center gap-2"
+                    >
+                      {loading && activeTab === "responsePart" ? (
                         <Loader2 className="h-4 w-4 animate-spin" />
                       ) : (
                         <RefreshCw className="h-4 w-4" />

@@ -48,8 +48,12 @@ export async function callGeminiAPI(
 export async function generateAdText(
   productInfo: string,
   targetAudience: string,
-  adType: "headline" | "description" | "both" = "both"
-): Promise<{ headlines?: string[]; descriptions?: string[] }> {
+  adType: "headline" | "description" | "responsePart" | "both" = "both"
+): Promise<{
+  headlines?: string[];
+  descriptions?: string[];
+  responseParts?: string[];
+}> {
   let prompt = `Generate compelling ad text for the following product/service:
 Product/Service: ${productInfo}
 Target Audience: ${targetAudience}
@@ -63,6 +67,10 @@ Target Audience: ${targetAudience}
     prompt += `\nCreate 2 descriptive ad texts (max 90 characters each) that explain the value proposition.`;
   }
 
+  if (adType === "responsePart" || adType === "both") {
+    prompt += `\nCreate 2 response part advertisements (max 60 characters each) that encourage user interaction or response.`;
+  }
+
   prompt += `\nFormat the response as plain text with headlines and descriptions clearly labeled.`;
 
   const result = await callGeminiAPI(prompt, { temperature: 0.8 });
@@ -70,6 +78,7 @@ Target Audience: ${targetAudience}
   // Parse the response to extract headlines and descriptions
   const headlines: string[] = [];
   const descriptions: string[] = [];
+  const responseParts: string[] = [];
 
   const lines = result.split("\n");
   for (const line of lines) {
@@ -82,12 +91,22 @@ Target Audience: ${targetAudience}
     ) {
       const description = line.split(":")[1]?.trim();
       if (description) descriptions.push(description);
+    } else if (
+      (line.toLowerCase().includes("response part") ||
+        line.toLowerCase().includes("responsepart")) &&
+      line.includes(":")
+    ) {
+      const responsePart = line.split(":")[1]?.trim();
+      if (responsePart) responseParts.push(responsePart);
     }
   }
 
   return {
     ...(adType === "headline" || adType === "both" ? { headlines } : {}),
     ...(adType === "description" || adType === "both" ? { descriptions } : {}),
+    ...(adType === "responsePart" || adType === "both"
+      ? { responseParts }
+      : {}),
   };
 }
 
@@ -428,4 +447,44 @@ Format your response with clearly separated sections for each category.`;
     targetingRecommendations,
     structureRecommendations,
   };
+}
+
+/**
+ * Generate response part advertisements based on product/service information and target audience
+ * @param productInfo Information about the product or service
+ * @param targetAudience Description of the target audience
+ * @param options Additional options for generation
+ * @returns Generated response part advertisements
+ */
+export async function generateResponsePartAds(
+  productInfo: string,
+  targetAudience: string,
+  options?: {
+    keywords?: string[];
+    tone?: string;
+  }
+): Promise<string[]> {
+  let prompt = `Generate compelling response part advertisements for the following product/service:
+Product/Service: ${productInfo}
+Target Audience: ${targetAudience}
+`;
+
+  if (options?.keywords && options.keywords.length > 0) {
+    prompt += `\nKeywords to include: ${options.keywords.join(", ")}`;
+  }
+
+  if (options?.tone) {
+    prompt += `\nTone: ${options.tone}`;
+  }
+
+  prompt += `\nCreate 3-5 response part advertisements (max 60 characters each) that encourage user interaction or response.
+Format the response as a simple list with one response part per line, without numbering or bullet points.`;
+
+  const result = await callGeminiAPI(prompt, { temperature: 0.7 });
+
+  // Parse the response to extract response parts
+  return result
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 0);
 }

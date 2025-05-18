@@ -9,6 +9,7 @@ import {
   TargetIcon,
   UsersIcon,
 } from "lucide-react";
+import { generateResponsePartAds } from "@/lib/gemini-api";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -114,6 +115,27 @@ export function GoogleAdsAITab({ campaignId }: GoogleAdsAITabProps) {
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <h2 className="text-xl sm:text-2xl font-bold">Google広告 AI機能</h2>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={async () => {
+              try {
+                const result = await generateResponsePartAds(
+                  "Google広告キャンペーン",
+                  "広告主",
+                  { tone: "プロフェッショナル" }
+                );
+                alert(`レスポンス部広告の例:\n${result.join("\n")}`);
+              } catch (err) {
+                console.error("Failed to generate response part ads", err);
+                alert("レスポンス部広告の生成に失敗しました");
+              }
+            }}
+          >
+            レスポンス部広告を生成
+          </Button>
+        </div>
         <Button
           onClick={handleRefreshInsights}
           disabled={isLoading}
