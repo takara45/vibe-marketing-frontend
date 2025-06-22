@@ -50,3 +50,7 @@
 
 ## New Features
 [2025-05-19 01:28] - **Response Part Advertisement Generation**: Implemented functionality to generate response part advertisements using the Gemini API. Added a new generateResponsePartAds function to the Gemini API client, updated the generateAdText function to support response parts, and integrated this functionality into the AI suggestions tab and Google Ads AI tab components. Added comprehensive tests for the new functionality.
+
+[2025-05-19 01:45] - **UI Improvements for Response Part Ads**: Enhanced the user interface for response part advertisements to match the text ad implementation. Created dedicated handler functions for generating response part ads in both the AI suggestions tab and Google Ads AI tab components. Added proper UI components for displaying the generated response part ads, including generation buttons, display cards, and regeneration functionality.
+
+[2025-05-19 02:08] - **User Input for Responsive Search Ads**: Added functionality to allow users to input their own text for generating responsive search ads. Added text input fields to both the AI suggestions tab and Google Ads AI tab components. Updated the handler functions to use the user input text for generating responsive search ads. Updated the UI text to use "レスポンシブ検索広告" (responsive search ads) instead of "response part ads" for better clarity.

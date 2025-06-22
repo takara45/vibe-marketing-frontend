@@ -21,3 +21,7 @@
 
 ## Recent Implementation
 [2025-05-19 01:28] - Added functionality to generate response part advertisements using the Gemini API. Updated the gemini-api.ts file to add a new generateResponsePartAds function and modified the generateAdText function to support response part ads. Updated the AI suggestions tab and Google Ads AI tab components to include response part ad generation. Added tests for the new functionality.
+
+[2025-05-19 01:45] - Improved the UI for response part advertisements to match the text ad implementation. Created dedicated handler functions for generating response part ads in both the AI suggestions tab and Google Ads AI tab components. Added proper UI components for displaying the generated response part ads.
+
+[2025-05-19 02:07] - Updated the UI to allow users to input text for generating responsive search ads. Added text input fields to both the AI suggestions tab and Google Ads AI tab components. Updated the handler functions to use the user input text for generating responsive search ads. Updated the UI text to use "レスポンシブ検索広告" (responsive search ads) instead of "response part ads".
