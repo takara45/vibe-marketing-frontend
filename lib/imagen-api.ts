@@ -1,16 +1,12 @@
 import { z } from "zod";
-import { GenerateImagesResponse, GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
 
-// Imagen API configuration from environment variables
-const IMAGEN_API_KEY =
-  process.env.NEXT_PUBLIC_IMAGEN_API_KEY || "DUMMY_API_KEY";
-const IMAGEN_API_URL =
-  process.env.NEXT_PUBLIC_IMAGEN_API_URL ||
-  "https://generativelanguage.googleapis.com/v1beta/models";
-const IMAGEN_MODEL =
-  process.env.NEXT_PUBLIC_IMAGEN_MODEL || "imagen-3.0-generate-002";
+// Use Gemini API key for image generation
+const GEMINI_API_KEY =
+  process.env.NEXT_PUBLIC_GEMINI_API_KEY || "DUMMY_API_KEY";
+const GEMINI_IMAGE_MODEL = "gemini-2.0-flash-preview-image-generation";
 
-const ai = new GoogleGenAI({ apiKey: IMAGEN_API_KEY });
+const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 // Schema for Imagen API request based on Imagen 3.0 documentation
 const imagenRequestSchema = z.object({
@@ -60,7 +56,7 @@ export type ImagenRequest = z.infer<typeof imagenRequestSchema>;
 export type ImagenResponse = z.infer<typeof imagenResponseSchema>;
 
 /**
- * Base function to make requests to the Imagen API
+ * Generate images using Gemini 2.0 Flash image generation
  */
 export async function callImagenAPI(
   prompt: string,
@@ -71,37 +67,60 @@ export async function callImagenAPI(
   }
 ): Promise<any> {
   try {
-    console.log("Calling Imagen API with:", {
-      model: IMAGEN_MODEL,
+    console.log("Generating image with Gemini:", {
+      model: GEMINI_IMAGE_MODEL,
       prompt: prompt.substring(0, 100),
       options,
-      apiKey: IMAGEN_API_KEY ? "Set" : "Not set",
+      apiKey: GEMINI_API_KEY ? "Set" : "Not set",
     });
 
-    if (!IMAGEN_API_KEY || IMAGEN_API_KEY === "DUMMY_API_KEY") {
-      throw new Error("Imagen API key is not properly configured");
+    if (!GEMINI_API_KEY || GEMINI_API_KEY === "DUMMY_API_KEY") {
+      throw new Error("Gemini API key is not properly configured");
     }
 
-    // Use the correct API method for image generation according to official docs
-    const response = await ai.models.generateImages({
-      model: IMAGEN_MODEL,
-      prompt: prompt,
+    // Generate content with image generation capability
+    const response = await ai.models.generateContent({
+      model: GEMINI_IMAGE_MODEL,
+      contents: prompt,
       config: {
-        numberOfImages: 1,
-        includeRaiReason: true,
-        includeSafetyAttributes: true,
+        responseModalities: [Modality.TEXT, Modality.IMAGE],
+
+        // temperature: 0.7,
+        // maxOutputTokens: 1024,
       },
     });
 
-    console.log("Imagen API response:", response);
-    return response;
+    console.log("Gemini image generation response:", response);
+
+    // Extract generated images
+    const generatedImages: string[] = [];
+
+    if (response.candidates && response.candidates.length > 0) {
+      const candidate = response.candidates[0];
+      if (candidate.content && candidate.content.parts) {
+        for (const part of candidate.content.parts) {
+          if (part.inlineData && part.inlineData.data) {
+            generatedImages.push(part.inlineData.data);
+          }
+        }
+      }
+    }
+
+    return {
+      generatedImages,
+      dimensions: {
+        width: options?.width || 1024,
+        height: options?.height || 1024,
+      },
+      sampleCount: generatedImages.length,
+    };
   } catch (error) {
-    console.error("Imagen API error:", error);
-    console.error("Imagen API request parameters:", {
+    console.error("Gemini image generation error:", error);
+    console.error("Gemini API request parameters:", {
       prompt: prompt.substring(0, 200),
-      model: IMAGEN_MODEL,
+      model: GEMINI_IMAGE_MODEL,
       options: options ? JSON.stringify(options) : "undefined",
-      apiKeyStatus: IMAGEN_API_KEY ? "Set" : "Not set",
+      apiKeyStatus: GEMINI_API_KEY ? "Set" : "Not set",
     });
     throw error;
   }
@@ -140,6 +159,7 @@ export async function generateAdImage(
   let prompt = `Create a professional advertising image for the following product/service:
 Product/Service: ${productInfo}
 Target Audience: ${targetAudience}
+Dimensions: ${width}x${height} (${adSize} format)
 `;
 
   if (style) {
@@ -154,34 +174,6 @@ Target Audience: ${targetAudience}
     sampleCount: 2,
   });
 
-  // Extract image data from the response according to official Imagen 3.0 API format
-  const imageDataArray: string[] = [];
-
-  if (response.generatedImages) {
-    for (const generatedImage of response.generatedImages) {
-      if (generatedImage.image?.imageBytes) {
-        imageDataArray.push(generatedImage.image.imageBytes);
-      }
-    }
-  }
-
-  return imageDataArray;
-}
-
-/**
- * Optimize an existing image for advertising
- */
-export async function optimizeAdImage(
-  imageBase64: string,
-  optimizationType: "resize" | "enhance" | "crop" = "enhance",
-  targetWidth?: number,
-  targetHeight?: number
-): Promise<string> {
-  // In a real implementation, this would send the image to the Imagen API
-  // for optimization. For now, we'll just return the original image.
-  // This is a placeholder for the actual implementation.
-
-  // Mock implementation - in reality, this would call the Imagen API
-  // with the appropriate parameters for the requested optimization
-  return imageBase64;
+  // Return actual generated images
+  return response.generatedImages || [];
 }
