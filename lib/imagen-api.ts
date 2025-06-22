@@ -8,7 +8,7 @@ const IMAGEN_API_URL =
   process.env.NEXT_PUBLIC_IMAGEN_API_URL ||
   "https://generativelanguage.googleapis.com/v1beta/models";
 const IMAGEN_MODEL =
-  process.env.NEXT_PUBLIC_IMAGEN_MODEL || "imagegeneration@005";
+  process.env.NEXT_PUBLIC_IMAGEN_MODEL || "imagen-3.0-generate-002";
 
 const ai = new GoogleGenAI({ apiKey: IMAGEN_API_KEY });
 
@@ -69,36 +69,39 @@ export async function callImagenAPI(
     width?: number;
     height?: number;
   }
-): Promise<GenerateImagesResponse> {
+): Promise<any> {
   try {
-    // Configure aspect ratio based on width and height if provided
-    let aspectRatio: string | undefined;
-    if (options?.width && options?.height) {
-      // Calculate the aspect ratio as width:height
-      const gcd = (a: number, b: number): number =>
-        b === 0 ? a : gcd(b, a % b);
-      const divisor = gcd(options.width, options.height);
-      aspectRatio = `${options.width / divisor}:${options.height / divisor}`;
+    console.log("Calling Imagen API with:", {
+      model: IMAGEN_MODEL,
+      prompt: prompt.substring(0, 100),
+      options,
+      apiKey: IMAGEN_API_KEY ? "Set" : "Not set",
+    });
+
+    if (!IMAGEN_API_KEY || IMAGEN_API_KEY === "DUMMY_API_KEY") {
+      throw new Error("Imagen API key is not properly configured");
     }
 
-    // Generate the image using the Google GenAI SDK
+    // Use the correct API method for image generation according to official docs
     const response = await ai.models.generateImages({
       model: IMAGEN_MODEL,
       prompt: prompt,
       config: {
-        numberOfImages: options?.sampleCount || 1,
+        numberOfImages: 1,
         includeRaiReason: true,
-        aspectRatio: aspectRatio,
         includeSafetyAttributes: true,
       },
     });
 
+    console.log("Imagen API response:", response);
     return response;
   } catch (error) {
     console.error("Imagen API error:", error);
     console.error("Imagen API request parameters:", {
-      prompt,
-      options: options ? JSON.stringify(options) : undefined,
+      prompt: prompt.substring(0, 200),
+      model: IMAGEN_MODEL,
+      options: options ? JSON.stringify(options) : "undefined",
+      apiKeyStatus: IMAGEN_API_KEY ? "Set" : "Not set",
     });
     throw error;
   }
@@ -145,9 +148,13 @@ Target Audience: ${targetAudience}
 
   prompt += `\nThe image should be visually appealing, professional, and clearly communicate the value proposition. It should be suitable for digital advertising.`;
 
-  const response = await callImagenAPI(prompt, { width, height });
+  const response = await callImagenAPI(prompt, {
+    width,
+    height,
+    sampleCount: 2,
+  });
 
-  // Extract image data from the response
+  // Extract image data from the response according to official Imagen 3.0 API format
   const imageDataArray: string[] = [];
 
   if (response.generatedImages) {

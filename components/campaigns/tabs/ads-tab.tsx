@@ -645,7 +645,7 @@ export function AdsTab({ campaignId }: AdsTabProps) {
                             "square"
                           );
                           setGeneratedImages(images);
-                        } catch (error) {
+                        } catch (error: any) {
                           console.error("Image generation error:", error);
                           setImageError(
                             "画像の生成中にエラーが発生しました。後でもう一度お試しください。"
