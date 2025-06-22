@@ -20,7 +20,16 @@ export async function callGeminiAPI(
   }
 ): Promise<string> {
   try {
-    // Generate content using the Google GenAI SDK
+    console.log(
+      "Calling Gemini API with prompt:",
+      prompt.substring(0, 100) + "..."
+    );
+    console.log("Using model:", GEMINI_MODEL);
+    console.log("Using API key:", GEMINI_API_KEY ? "Set" : "Not set");
+
+    // Use the correct API method for @google/genai v0.14.1
+    const model = GEMINI_MODEL;
+
     const result = await genAI.models.generateContent({
       model: GEMINI_MODEL,
       contents: prompt,
@@ -30,12 +39,23 @@ export async function callGeminiAPI(
       },
     });
 
+    console.log("Gemini API raw response:", result);
+
     // Extract text from the response
-    return result.text || "";
+    const text = result.text || "";
+
+    console.log("Extracted text:", text);
+
+    if (!text || text.trim() === "") {
+      throw new Error("Empty response from Gemini API");
+    }
+
+    return text;
   } catch (error) {
     console.error("Gemini API error:", error);
     console.error("Gemini API request parameters:", {
-      prompt,
+      prompt: prompt.substring(0, 200) + "...",
+      model: GEMINI_MODEL,
       options: options ? JSON.stringify(options) : undefined,
     });
     throw error;
@@ -54,26 +74,50 @@ export async function generateAdText(
   descriptions?: string[];
   responseParts?: string[];
 }> {
-  let prompt = `Generate compelling ad text for the following product/service:
+  let prompt = `You are an expert copywriter creating Google Ads content. Generate compelling ad text for the following:
+
 Product/Service: ${productInfo}
 Target Audience: ${targetAudience}
-`;
+
+Please provide the content in the exact format below:`;
 
   if (adType === "headline" || adType === "both") {
-    prompt += `\nCreate 3 engaging headlines (max 30 characters each) that highlight the key benefits.`;
+    prompt += `
+
+HEADLINES:
+1. [First headline - max 30 characters]
+2. [Second headline - max 30 characters]  
+3. [Third headline - max 30 characters]`;
   }
 
   if (adType === "description" || adType === "both") {
-    prompt += `\nCreate 2 descriptive ad texts (max 90 characters each) that explain the value proposition.`;
+    prompt += `
+
+DESCRIPTIONS:
+1. [First description - max 90 characters]
+2. [Second description - max 90 characters]`;
   }
 
   if (adType === "responsePart" || adType === "both") {
-    prompt += `\nCreate 2 response part advertisements (max 60 characters each) that encourage user interaction or response.`;
+    prompt += `
+
+RESPONSE PARTS:
+1. [First response part - max 60 characters]
+2. [Second response part - max 60 characters]`;
   }
 
-  prompt += `\nFormat the response as plain text with headlines and descriptions clearly labeled.`;
+  prompt += `
+
+Important: 
+- Use the exact section headers shown above (HEADLINES:, DESCRIPTIONS:, RESPONSE PARTS:)
+- Each line should start with a number and period
+- Keep within character limits
+- Make content compelling and relevant to the target audience
+- Do not include any additional text or explanations`;
 
   const result = await callGeminiAPI(prompt, { temperature: 0.8 });
+
+  console.log("Raw AI response for parsing:", result);
 
   // Parse the response to extract headlines and descriptions
   const headlines: string[] = [];
@@ -81,25 +125,84 @@ Target Audience: ${targetAudience}
   const responseParts: string[] = [];
 
   const lines = result.split("\n");
+  let currentSection: "headlines" | "descriptions" | "responseParts" | null =
+    null;
+
   for (const line of lines) {
-    if (line.toLowerCase().includes("headline") && line.includes(":")) {
-      const headline = line.split(":")[1]?.trim();
-      if (headline) headlines.push(headline);
-    } else if (
-      line.toLowerCase().includes("description") &&
-      line.includes(":")
+    const trimmedLine = line.trim();
+    if (!trimmedLine) continue;
+
+    const lowerLine = trimmedLine.toLowerCase();
+
+    // Detect section headers (exact matches from our prompt)
+    if (lowerLine === "headlines:") {
+      currentSection = "headlines";
+      continue;
+    } else if (lowerLine === "descriptions:") {
+      currentSection = "descriptions";
+      continue;
+    } else if (lowerLine === "response parts:") {
+      currentSection = "responseParts";
+      continue;
+    }
+
+    // Also handle variations in case AI doesn't follow exact format
+    if (
+      lowerLine.includes("headline") &&
+      (lowerLine.includes(":") || lowerLine.includes("s:"))
     ) {
-      const description = line.split(":")[1]?.trim();
-      if (description) descriptions.push(description);
+      currentSection = "headlines";
+      continue;
     } else if (
-      (line.toLowerCase().includes("response part") ||
-        line.toLowerCase().includes("responsepart")) &&
-      line.includes(":")
+      lowerLine.includes("description") &&
+      (lowerLine.includes(":") || lowerLine.includes("s:"))
     ) {
-      const responsePart = line.split(":")[1]?.trim();
-      if (responsePart) responseParts.push(responsePart);
+      currentSection = "descriptions";
+      continue;
+    } else if (lowerLine.includes("response part") && lowerLine.includes(":")) {
+      currentSection = "responseParts";
+      continue;
+    }
+
+    // Extract content based on current section
+    if (currentSection && trimmedLine.length > 0) {
+      let content = trimmedLine;
+
+      // Remove numbering (1., 2., etc.) and bullet points
+      content = content.replace(/^\d+\.\s*/, "").replace(/^[-*•]\s*/, "");
+
+      // Handle colon-separated format
+      if (content.includes(":") && !content.startsWith("http")) {
+        const parts = content.split(":");
+        if (parts.length === 2) {
+          content = parts[1].trim();
+        }
+      }
+
+      // Remove quotes
+      content = content.replace(/^["']|["']$/g, "").trim();
+
+      // Minimum length check and avoid common non-content lines
+      if (
+        content &&
+        content.length > 3 &&
+        !lowerLine.includes("example") &&
+        !lowerLine.includes("note:")
+      ) {
+        if (currentSection === "headlines" && content.length <= 30) {
+          headlines.push(content);
+        } else if (currentSection === "descriptions" && content.length <= 90) {
+          descriptions.push(content);
+        } else if (currentSection === "responseParts" && content.length <= 60) {
+          responseParts.push(content);
+        }
+      }
     }
   }
+
+  console.log("Parsed headlines:", headlines);
+  console.log("Parsed descriptions:", descriptions);
+  console.log("Parsed response parts:", responseParts);
 
   return {
     ...(adType === "headline" || adType === "both" ? { headlines } : {}),
