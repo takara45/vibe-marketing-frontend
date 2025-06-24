@@ -34,7 +34,7 @@ export function CampaignTabs({ id }: CampaignTabsProps) {
       onValueChange={setActiveTab}
       className="space-y-4"
     >
-      <TabsList className="flex flex-wrap sm:flex-nowrap overflow-x-auto">
+      <TabsList className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 w-full gap-1 h-auto">
         <TabsTrigger value="ad-groups" className="flex items-center gap-2">
           <MousePointerClickIcon className="h-4 w-4" />
           <span className="hidden sm:inline">広告グループ</span>
