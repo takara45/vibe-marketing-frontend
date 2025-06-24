@@ -55,6 +55,9 @@ const campaignsData = [
     convRate: 5.13,
     cpa: 4102.56,
     roas: 350,
+    mostEffectiveAgeGroup: "35-44歳",
+    mostEffectiveGender: "女性",
+    attributeCoverage: 85,
     cpc: { current: 210.5, previous: 198.2, trend: 'up' as const, category: 'high' as const },
   },
   {
@@ -75,6 +78,9 @@ const campaignsData = [
     convRate: 4.59,
     cpa: 4666.67,
     roas: 280,
+    mostEffectiveAgeGroup: "25-34歳",
+    mostEffectiveGender: "男性",
+    attributeCoverage: 72,
     cpc: { current: 214.3, previous: 225.8, trend: 'down' as const, category: 'high' as const },
   },
   {
@@ -95,6 +101,9 @@ const campaignsData = [
     convRate: 3.76,
     cpa: 5625.0,
     roas: 220,
+    mostEffectiveAgeGroup: "18-24歳",
+    mostEffectiveGender: "女性",
+    attributeCoverage: 68,
     cpc: { current: 211.8, previous: 198.5, trend: 'up' as const, category: 'high' as const },
   },
   {
@@ -115,6 +124,9 @@ const campaignsData = [
     convRate: 5.83,
     cpa: 3571.43,
     roas: 420,
+    mostEffectiveAgeGroup: "45-54歳",
+    mostEffectiveGender: "女性",
+    attributeCoverage: 91,
     cpc: { current: 208.3, previous: 218.9, trend: 'down' as const, category: 'high' as const },
   },
   {
@@ -135,6 +147,9 @@ const campaignsData = [
     convRate: 0,
     cpa: 0,
     roas: 0,
+    mostEffectiveAgeGroup: "-",
+    mostEffectiveGender: "-",
+    attributeCoverage: 0,
     cpc: { current: 0, previous: 0, trend: 'stable' as const, category: 'low' as const },
   },
   {
@@ -155,6 +170,9 @@ const campaignsData = [
     convRate: 5.14,
     cpa: 3684.21,
     roas: 380,
+    mostEffectiveAgeGroup: "25-34歳",
+    mostEffectiveGender: "女性",
+    attributeCoverage: 88,
     cpc: { current: 189.2, previous: 195.8, trend: 'down' as const, category: 'medium' as const },
   },
 ]
@@ -292,7 +310,7 @@ export function CampaignList() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+              <div className="grid gap-4 md:grid-cols-3 lg:grid-cols-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">予算</span>
@@ -359,14 +377,16 @@ export function CampaignList() {
                         <span className="font-medium">{campaign.roas}%</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">総費用</span>
-                        <span className="font-medium">¥{campaign.spent.toLocaleString()}</span>
+                        <span className="text-muted-foreground">効果的年齢層</span>
+                        <span className="font-medium text-xs">{campaign.mostEffectiveAgeGroup}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">総売上</span>
-                        <span className="font-medium">
-                          ¥{((campaign.spent * campaign.roas) / 100).toLocaleString()}
-                        </span>
+                        <span className="text-muted-foreground">効果的性別</span>
+                        <span className="font-medium text-xs">{campaign.mostEffectiveGender}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">属性カバレッジ</span>
+                        <span className="font-medium text-xs">{campaign.attributeCoverage}%</span>
                       </div>
                     </div>
                   </>
