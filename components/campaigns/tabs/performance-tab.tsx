@@ -216,6 +216,21 @@ export function PerformanceTab({ campaignId }: PerformanceTabProps) {
                   <p className="text-xs text-muted-foreground">前週比: +¥120</p>
                 </div>
               </div>
+              <div className="border-t pt-4 mt-4">
+                <p className="text-sm font-medium mb-3">ユーザー属性別パフォーマンス</p>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">最効果的年齢層</p>
+                    <p className="text-lg font-bold">35-44歳</p>
+                    <p className="text-xs text-muted-foreground">CV率: 6.73%</p>
+                  </div>
+                  <div className="space-y-2">
+                    <p className="text-xs text-muted-foreground">最効果的性別</p>
+                    <p className="text-lg font-bold">女性</p>
+                    <p className="text-xs text-muted-foreground">CV率: 6.48%</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

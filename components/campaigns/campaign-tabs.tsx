@@ -8,6 +8,7 @@ import {
   MousePointerClickIcon,
   SearchIcon,
   SparklesIcon,
+  UsersIcon,
 } from "lucide-react";
 
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -17,6 +18,7 @@ import { KeywordsTab } from "@/components/campaigns/tabs/keywords-tab";
 import { PerformanceTab } from "@/components/campaigns/tabs/performance-tab";
 import { AiSuggestionsTab } from "@/components/campaigns/tabs/ai-suggestions-tab";
 import { GoogleAdsAITab } from "@/components/campaigns/tabs/google-ads-ai-tab";
+import { AudienceInsightsTab } from "@/components/campaigns/tabs/audience-insights-tab";
 
 interface CampaignTabsProps {
   id: string;
@@ -52,6 +54,11 @@ export function CampaignTabs({ id }: CampaignTabsProps) {
           <span className="hidden sm:inline">パフォーマンス</span>
           <span className="sm:hidden">分析</span>
         </TabsTrigger>
+        <TabsTrigger value="audience-insights" className="flex items-center gap-2">
+          <UsersIcon className="h-4 w-4" />
+          <span className="hidden sm:inline">オーディエンス分析</span>
+          <span className="sm:hidden">属性</span>
+        </TabsTrigger>
         <TabsTrigger value="ai-suggestions" className="flex items-center gap-2">
           <SparklesIcon className="h-4 w-4" />
           <span className="hidden sm:inline">AI提案</span>
@@ -74,6 +81,9 @@ export function CampaignTabs({ id }: CampaignTabsProps) {
       </TabsContent>
       <TabsContent value="performance" className="space-y-4">
         <PerformanceTab campaignId={id} />
+      </TabsContent>
+      <TabsContent value="audience-insights" className="space-y-4">
+        <AudienceInsightsTab campaignId={id} />
       </TabsContent>
       <TabsContent value="ai-suggestions" className="space-y-4">
         <AiSuggestionsTab campaignId={id} />

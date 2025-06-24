@@ -54,6 +54,10 @@ const campaignsData = [
     convRate: 5.13,
     cpa: 4102.56,
     roas: 350,
+    // ユーザー属性データ
+    mostEffectiveAgeGroup: "35-44歳",
+    mostEffectiveGender: "女性",
+    attributeCoverage: 85,
   },
   {
     id: "2",
@@ -73,6 +77,9 @@ const campaignsData = [
     convRate: 4.59,
     cpa: 4666.67,
     roas: 280,
+    mostEffectiveAgeGroup: "25-34歳",
+    mostEffectiveGender: "男性",
+    attributeCoverage: 72,
   },
   {
     id: "3",
@@ -92,6 +99,9 @@ const campaignsData = [
     convRate: 3.76,
     cpa: 5625.0,
     roas: 220,
+    mostEffectiveAgeGroup: "18-24歳",
+    mostEffectiveGender: "女性",
+    attributeCoverage: 68,
   },
   {
     id: "4",
@@ -111,6 +121,9 @@ const campaignsData = [
     convRate: 5.83,
     cpa: 3571.43,
     roas: 420,
+    mostEffectiveAgeGroup: "45-54歳",
+    mostEffectiveGender: "女性",
+    attributeCoverage: 91,
   },
   {
     id: "5",
@@ -130,6 +143,9 @@ const campaignsData = [
     convRate: 0,
     cpa: 0,
     roas: 0,
+    mostEffectiveAgeGroup: "-",
+    mostEffectiveGender: "-",
+    attributeCoverage: 0,
   },
   {
     id: "6",
@@ -149,6 +165,9 @@ const campaignsData = [
     convRate: 5.14,
     cpa: 3684.21,
     roas: 380,
+    mostEffectiveAgeGroup: "25-34歳",
+    mostEffectiveGender: "女性",
+    attributeCoverage: 88,
   },
 ]
 
@@ -340,14 +359,16 @@ export function CampaignList() {
                         <span className="font-medium">{campaign.roas}%</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">総費用</span>
-                        <span className="font-medium">¥{campaign.spent.toLocaleString()}</span>
+                        <span className="text-muted-foreground">効果的年齢層</span>
+                        <span className="font-medium text-xs">{campaign.mostEffectiveAgeGroup}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm">
-                        <span className="text-muted-foreground">総売上</span>
-                        <span className="font-medium">
-                          ¥{((campaign.spent * campaign.roas) / 100).toLocaleString()}
-                        </span>
+                        <span className="text-muted-foreground">効果的性別</span>
+                        <span className="font-medium text-xs">{campaign.mostEffectiveGender}</span>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-muted-foreground">属性カバレッジ</span>
+                        <span className="font-medium text-xs">{campaign.attributeCoverage}%</span>
                       </div>
                     </div>
                   </>
