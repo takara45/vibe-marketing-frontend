@@ -34,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { CPCMetricCard } from "@/components/ui/cpc-metric-card"
 
 const campaignsData = [
   {
@@ -54,6 +55,7 @@ const campaignsData = [
     convRate: 5.13,
     cpa: 4102.56,
     roas: 350,
+    cpc: { current: 210.5, previous: 198.2, trend: 'up' as const, category: 'high' as const },
   },
   {
     id: "2",
@@ -73,6 +75,7 @@ const campaignsData = [
     convRate: 4.59,
     cpa: 4666.67,
     roas: 280,
+    cpc: { current: 214.3, previous: 225.8, trend: 'down' as const, category: 'high' as const },
   },
   {
     id: "3",
@@ -92,6 +95,7 @@ const campaignsData = [
     convRate: 3.76,
     cpa: 5625.0,
     roas: 220,
+    cpc: { current: 211.8, previous: 198.5, trend: 'up' as const, category: 'high' as const },
   },
   {
     id: "4",
@@ -111,6 +115,7 @@ const campaignsData = [
     convRate: 5.83,
     cpa: 3571.43,
     roas: 420,
+    cpc: { current: 208.3, previous: 218.9, trend: 'down' as const, category: 'high' as const },
   },
   {
     id: "5",
@@ -130,6 +135,7 @@ const campaignsData = [
     convRate: 0,
     cpa: 0,
     roas: 0,
+    cpc: { current: 0, previous: 0, trend: 'stable' as const, category: 'low' as const },
   },
   {
     id: "6",
@@ -149,6 +155,7 @@ const campaignsData = [
     convRate: 5.14,
     cpa: 3684.21,
     roas: 380,
+    cpc: { current: 189.2, previous: 195.8, trend: 'down' as const, category: 'medium' as const },
   },
 ]
 
@@ -285,7 +292,7 @@ export function CampaignList() {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">予算</span>
@@ -304,6 +311,18 @@ export function CampaignList() {
                     </div>
                   )}
                 </div>
+                {campaign.status !== "draft" && campaign.cpc && (
+                  <div className="lg:col-span-1">
+                    <CPCMetricCard
+                      title="平均CPC"
+                      currentCPC={campaign.cpc.current}
+                      previousCPC={campaign.cpc.previous}
+                      trend={campaign.cpc.trend}
+                      category={campaign.cpc.category}
+                      description="クリック単価"
+                    />
+                  </div>
+                )}
                 {campaign.status !== "draft" && (
                   <>
                     <div className="space-y-1">
@@ -353,7 +372,7 @@ export function CampaignList() {
                   </>
                 )}
                 {campaign.status === "draft" && (
-                  <div className="col-span-3 flex items-center text-sm text-muted-foreground">
+                  <div className="col-span-4 flex items-center text-sm text-muted-foreground">
                     このキャンペーンはまだ開始されていません。編集して開始してください。
                   </div>
                 )}
