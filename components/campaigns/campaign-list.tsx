@@ -34,6 +34,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { CPCMetricCard } from "@/components/ui/cpc-metric-card"
 
 const campaignsData = [
   {
@@ -54,10 +55,10 @@ const campaignsData = [
     convRate: 5.13,
     cpa: 4102.56,
     roas: 350,
-    // ユーザー属性データ
     mostEffectiveAgeGroup: "35-44歳",
     mostEffectiveGender: "女性",
     attributeCoverage: 85,
+    cpc: { current: 210.5, previous: 198.2, trend: 'up' as const, category: 'high' as const },
   },
   {
     id: "2",
@@ -80,6 +81,7 @@ const campaignsData = [
     mostEffectiveAgeGroup: "25-34歳",
     mostEffectiveGender: "男性",
     attributeCoverage: 72,
+    cpc: { current: 214.3, previous: 225.8, trend: 'down' as const, category: 'high' as const },
   },
   {
     id: "3",
@@ -102,6 +104,7 @@ const campaignsData = [
     mostEffectiveAgeGroup: "18-24歳",
     mostEffectiveGender: "女性",
     attributeCoverage: 68,
+    cpc: { current: 211.8, previous: 198.5, trend: 'up' as const, category: 'high' as const },
   },
   {
     id: "4",
@@ -124,6 +127,7 @@ const campaignsData = [
     mostEffectiveAgeGroup: "45-54歳",
     mostEffectiveGender: "女性",
     attributeCoverage: 91,
+    cpc: { current: 208.3, previous: 218.9, trend: 'down' as const, category: 'high' as const },
   },
   {
     id: "5",
@@ -146,6 +150,7 @@ const campaignsData = [
     mostEffectiveAgeGroup: "-",
     mostEffectiveGender: "-",
     attributeCoverage: 0,
+    cpc: { current: 0, previous: 0, trend: 'stable' as const, category: 'low' as const },
   },
   {
     id: "6",
@@ -168,6 +173,7 @@ const campaignsData = [
     mostEffectiveAgeGroup: "25-34歳",
     mostEffectiveGender: "女性",
     attributeCoverage: 88,
+    cpc: { current: 189.2, previous: 195.8, trend: 'down' as const, category: 'medium' as const },
   },
 ]
 
@@ -323,6 +329,18 @@ export function CampaignList() {
                     </div>
                   )}
                 </div>
+                {campaign.status !== "draft" && campaign.cpc && (
+                  <div className="lg:col-span-1">
+                    <CPCMetricCard
+                      title="平均CPC"
+                      currentCPC={campaign.cpc.current}
+                      previousCPC={campaign.cpc.previous}
+                      trend={campaign.cpc.trend}
+                      category={campaign.cpc.category}
+                      description="クリック単価"
+                    />
+                  </div>
+                )}
                 {campaign.status !== "draft" && (
                   <>
                     <div className="space-y-1">
@@ -374,7 +392,7 @@ export function CampaignList() {
                   </>
                 )}
                 {campaign.status === "draft" && (
-                  <div className="col-span-3 flex items-center text-sm text-muted-foreground">
+                  <div className="col-span-4 flex items-center text-sm text-muted-foreground">
                     このキャンペーンはまだ開始されていません。編集して開始してください。
                   </div>
                 )}

@@ -48,6 +48,16 @@ export interface ReportFilter {
   value: string;
 }
 
+export interface CPCAnalytics {
+  overall: {
+    average_cpc: number;
+    cpc_trend: Array<{date: string, cpc: number}>;
+  };
+  by_device: Array<{device: string, cpc: number, share: number}>;
+  by_location: Array<{location: string, cpc: number, volume: number}>;
+  by_hour: Array<{hour: number, cpc: number, competition: 'low' | 'medium' | 'high'}>;
+}
+
 interface AnalyticsState {
   // Data
   performanceData: PerformanceData[];
@@ -55,6 +65,7 @@ interface AnalyticsState {
   locationData: LocationData[];
   reports: Report[];
   selectedReport: Report | null;
+  cpcAnalytics: CPCAnalytics | null;
 
   // Filters
   dateRange: DateRange;
@@ -74,6 +85,10 @@ interface AnalyticsState {
     campaignIds?: string[];
   }) => Promise<void>;
   fetchLocationData: (params?: {
+    dateRange?: DateRange;
+    campaignIds?: string[];
+  }) => Promise<void>;
+  fetchCPCAnalytics: (params?: {
     dateRange?: DateRange;
     campaignIds?: string[];
   }) => Promise<void>;
@@ -181,6 +196,70 @@ const mockLocationData: LocationData[] = [
   },
 ];
 
+const generateMockCPCTrend = (days: number): Array<{date: string, cpc: number}> => {
+  const data: Array<{date: string, cpc: number}> = [];
+  const now = new Date();
+  
+  for (let i = days - 1; i >= 0; i--) {
+    const date = new Date(now);
+    date.setDate(date.getDate() - i);
+    
+    const cpc = Math.floor(Math.random() * 50) + 70; // 70-120円の範囲
+    
+    data.push({
+      date: date.toISOString().split("T")[0],
+      cpc,
+    });
+  }
+  
+  return data;
+};
+
+const mockCPCAnalytics: CPCAnalytics = {
+  overall: {
+    average_cpc: 89.5,
+    cpc_trend: generateMockCPCTrend(30),
+  },
+  by_device: [
+    { device: "mobile", cpc: 95.2, share: 58 },
+    { device: "desktop", cpc: 86.7, share: 35 },
+    { device: "tablet", cpc: 92.1, share: 7 },
+  ],
+  by_location: [
+    { location: "東京", cpc: 102.3, volume: 45000 },
+    { location: "大阪", cpc: 87.9, volume: 28000 },
+    { location: "名古屋", cpc: 79.5, volume: 18000 },
+    { location: "福岡", cpc: 71.2, volume: 12000 },
+    { location: "その他", cpc: 85.8, volume: 22000 },
+  ],
+  by_hour: [
+    { hour: 0, cpc: 65.2, competition: 'low' },
+    { hour: 1, cpc: 62.8, competition: 'low' },
+    { hour: 2, cpc: 58.5, competition: 'low' },
+    { hour: 3, cpc: 55.1, competition: 'low' },
+    { hour: 4, cpc: 59.8, competition: 'low' },
+    { hour: 5, cpc: 68.5, competition: 'low' },
+    { hour: 6, cpc: 78.2, competition: 'medium' },
+    { hour: 7, cpc: 89.5, competition: 'medium' },
+    { hour: 8, cpc: 95.8, competition: 'medium' },
+    { hour: 9, cpc: 102.3, competition: 'high' },
+    { hour: 10, cpc: 108.7, competition: 'high' },
+    { hour: 11, cpc: 112.5, competition: 'high' },
+    { hour: 12, cpc: 115.2, competition: 'high' },
+    { hour: 13, cpc: 118.9, competition: 'high' },
+    { hour: 14, cpc: 121.5, competition: 'high' },
+    { hour: 15, cpc: 118.2, competition: 'high' },
+    { hour: 16, cpc: 115.8, competition: 'high' },
+    { hour: 17, cpc: 112.3, competition: 'high' },
+    { hour: 18, cpc: 108.5, competition: 'high' },
+    { hour: 19, cpc: 105.2, competition: 'high' },
+    { hour: 20, cpc: 98.7, competition: 'medium' },
+    { hour: 21, cpc: 92.5, competition: 'medium' },
+    { hour: 22, cpc: 85.8, competition: 'medium' },
+    { hour: 23, cpc: 75.2, competition: 'low' },
+  ],
+};
+
 const mockReports: Report[] = [
   {
     id: "1",
@@ -242,6 +321,7 @@ export const useAnalyticsStore = create<AnalyticsState>()((set, get) => ({
   locationData: [],
   reports: [],
   selectedReport: null,
+  cpcAnalytics: null,
 
   dateRange: {
     from: new Date(new Date().setDate(new Date().getDate() - 30)),
@@ -313,6 +393,42 @@ export const useAnalyticsStore = create<AnalyticsState>()((set, get) => ({
           error instanceof Error
             ? error.message
             : "地域データの取得に失敗しました",
+        isLoading: false,
+      });
+    }
+  },
+
+  fetchCPCAnalytics: async (params) => {
+    set({ isLoading: true, error: null });
+    try {
+      // This would be an actual API call in production
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      const dateRange = params?.dateRange || get().dateRange;
+      const days =
+        dateRange.to && dateRange.from
+          ? Math.ceil(
+              (dateRange.to.getTime() - dateRange.from.getTime()) /
+                (1000 * 60 * 60 * 24)
+            ) + 1
+          : 30;
+
+      set({
+        cpcAnalytics: {
+          ...mockCPCAnalytics,
+          overall: {
+            ...mockCPCAnalytics.overall,
+            cpc_trend: generateMockCPCTrend(days),
+          },
+        },
+        isLoading: false,
+      });
+    } catch (error) {
+      set({
+        error:
+          error instanceof Error
+            ? error.message
+            : "CPCデータの取得に失敗しました",
         isLoading: false,
       });
     }
