@@ -37,6 +37,19 @@ export interface AdGroup {
       genders: string[];
     };
   };
+  cpc: {
+    current: number;
+    previous: number;
+    trend: 'up' | 'down' | 'stable';
+    category: 'high' | 'medium' | 'low';
+  };
+  keywordDetails: Array<{
+    keyword: string;
+    cpc: number;
+    quality_score: number;
+    impressions: number;
+    clicks: number;
+  }>;
 }
 
 interface CampaignState {
@@ -139,6 +152,17 @@ const mockAdGroups: AdGroup[] = [
         genders: ["male", "female"],
       },
     },
+    cpc: {
+      current: 95.2,
+      previous: 87.8,
+      trend: 'up',
+      category: 'medium',
+    },
+    keywordDetails: [
+      { keyword: "夏季セール", cpc: 102.5, quality_score: 8, impressions: 12500, clicks: 420 },
+      { keyword: "サマーセール", cpc: 87.9, quality_score: 7, impressions: 8900, clicks: 295 },
+      { keyword: "夏物商品", cpc: 95.2, quality_score: 9, impressions: 15200, clicks: 510 },
+    ],
   },
   {
     id: "2",
@@ -155,6 +179,17 @@ const mockAdGroups: AdGroup[] = [
         genders: ["male", "female"],
       },
     },
+    cpc: {
+      current: 86.7,
+      previous: 82.3,
+      trend: 'up',
+      category: 'low',
+    },
+    keywordDetails: [
+      { keyword: "夏季セール", cpc: 78.5, quality_score: 9, impressions: 18200, clicks: 682 },
+      { keyword: "サマーセール", cpc: 92.1, quality_score: 8, impressions: 14800, clicks: 485 },
+      { keyword: "夏物商品", cpc: 89.5, quality_score: 8, impressions: 16900, clicks: 548 },
+    ],
   },
 ];
 
