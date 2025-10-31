@@ -36,10 +36,10 @@ export function MobileNav() {
       active: pathname === "/campaigns" || pathname.startsWith("/campaigns/"),
     },
     {
-      href: "/analytics/reports",
+      href: "/analytics",
       label: "分析",
       icon: <LineChartIcon className="mr-2 h-4 w-4" />,
-      active: pathname?.startsWith("/analytics"),
+      active: pathname === "/analytics" || pathname.startsWith("/analytics/"),
     },
     {
       href: "/settings",
