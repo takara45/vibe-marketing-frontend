@@ -34,10 +34,10 @@ export function MainNav() {
       </Button>
       <Button
         variant="ghost"
-        className={cn("justify-start", pathname?.startsWith("/analytics") && "bg-accent text-accent-foreground")}
+        className={cn("justify-start", pathname === "/analytics" && "bg-accent text-accent-foreground")}
         asChild
       >
-        <Link href="/analytics/reports">
+        <Link href="/analytics">
           <LineChartIcon className="mr-2 h-4 w-4" />
           分析
         </Link>

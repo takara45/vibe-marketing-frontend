@@ -4,6 +4,7 @@ import { DashboardHeader } from "@/components/dashboard-header";
 import { DashboardShell } from "@/components/dashboard-shell";
 import { AnalyticsTabs } from "@/components/analytics/analytics-tabs";
 import { RealTimeDashboard } from "@/components/analytics/real-time-dashboard";
+import { CustomReportBuilder } from "@/components/analytics/custom-report-builder";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export const metadata: Metadata = {
@@ -30,15 +31,19 @@ export default function AnalyticsPage() {
       </DashboardHeader>
       <div className="grid gap-8">
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-8">
+          <TabsList className="grid w-full grid-cols-3 mb-8">
             <TabsTrigger value="overview">概要分析</TabsTrigger>
             <TabsTrigger value="realtime">リアルタイム</TabsTrigger>
+            <TabsTrigger value="custom">カスタムレポート</TabsTrigger>
           </TabsList>
           <TabsContent value="overview" className="space-y-4">
             <AnalyticsTabs />
           </TabsContent>
           <TabsContent value="realtime" className="space-y-4">
             <RealTimeDashboard />
+          </TabsContent>
+          <TabsContent value="custom" className="space-y-4">
+            <CustomReportBuilder />
           </TabsContent>
         </Tabs>
       </div>
