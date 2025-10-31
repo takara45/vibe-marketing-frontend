@@ -3,8 +3,6 @@ import { DashboardShell } from "@/components/dashboard-shell"
 import { OverviewCards } from "@/components/overview-cards"
 import { CampaignPerformance } from "@/components/campaign-performance"
 import { BudgetUsage } from "@/components/budget-usage"
-import { AiSuggestions } from "@/components/ai-suggestions"
-import { RecentCampaigns } from "@/components/recent-campaigns"
 import { PerformanceByDevice } from "@/components/performance-by-device"
 import { PerformanceByTime } from "@/components/performance-by-time"
 
@@ -24,10 +22,6 @@ export default function DashboardPage() {
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
           <CampaignPerformance className="lg:col-span-4" />
           <BudgetUsage className="lg:col-span-3" />
-        </div>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-          <AiSuggestions className="lg:col-span-3" />
-          <RecentCampaigns className="lg:col-span-4" />
         </div>
         <div className="grid gap-4 md:grid-cols-2">
           <PerformanceByDevice />
